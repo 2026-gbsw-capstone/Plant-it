@@ -1,0 +1,1 @@
+// Notification setting domain model.
