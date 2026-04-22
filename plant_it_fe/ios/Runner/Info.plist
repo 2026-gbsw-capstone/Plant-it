@@ -26,6 +26,16 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>식물 사진을 촬영해 AI 분석과 식물 기록에 사용합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>앨범에서 식물 사진을 선택해 업로드하고 기록을 작성합니다.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>물주기, 식물 관리, 커뮤니티 알림을 보내기 위해 알림 권한이 필요합니다.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
