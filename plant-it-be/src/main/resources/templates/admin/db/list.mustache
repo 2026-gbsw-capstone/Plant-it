@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <title>Plant-it Admin - DB Table</title>
+    <style>
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; background: #f6f3ed; color: #2f2d2a; }
+        header { padding: 24px 32px; background: #1f1f1f; color: white; display: flex; justify-content: space-between; align-items: center; }
+        main { max-width: 1200px; margin: 0 auto; padding: 32px; }
+        a { color: #167744; text-decoration: none; font-weight: 700; }
+        nav { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+        nav a { padding: 8px 10px; background: white; border-radius: 8px; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; }
+        .logout, .danger { border: 0; padding: 8px 12px; border-radius: 8px; color: white; font-weight: 800; cursor: pointer; }
+        .logout { background: #444; }
+        .danger { background: #b93d3d; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #ece7de; text-align: left; vertical-align: top; max-width: 280px; word-break: break-word; }
+        th { background: #ede8df; color: #59544d; font-size: 13px; }
+        .empty { padding: 40px; background: white; border-radius: 10px; text-align: center; color: #777; }
+    </style>
+</head>
+<body>
+<header>
+    <strong>Plant-it DB Admin</strong>
+    <form method="post" action="/admin/logout"><button class="logout" type="submit">로그아웃</button></form>
+</header>
+<main>
+    <nav>
+        <a href="/admin/guides">식물도감</a>
+        <a href="/admin/prompts">AI 프롬프트</a>
+        <a href="/admin/db/users">사용자</a>
+        <a href="/admin/db/plants">식물</a>
+        <a href="/admin/db/diaries">성장일지</a>
+        <a href="/admin/db/ai-analyses">AI 분석</a>
+        <a href="/admin/db/notification-settings">알림 설정</a>
+        <a href="/admin/db/notification-histories">알림 기록</a>
+    </nav>
+
+    {{#data}}
+        <div class="toolbar">
+            <h1>{{title}} 데이터</h1>
+        </div>
+
+        {{#hasRows}}
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    {{#headers}}
+                        <th>{{.}}</th>
+                    {{/headers}}
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{#rows}}
+                    <tr>
+                        <td>{{id}}</td>
+                        {{#cells}}
+                            <td>{{value}}</td>
+                        {{/cells}}
+                        <td>
+                            <form method="post" action="{{deleteUrl}}">
+                                <button class="danger" type="submit">삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                {{/rows}}
+                </tbody>
+            </table>
+        {{/hasRows}}
+        {{^hasRows}}
+            <div class="empty">데이터가 없습니다.</div>
+        {{/hasRows}}
+    {{/data}}
+</main>
+</body>
+</html>
