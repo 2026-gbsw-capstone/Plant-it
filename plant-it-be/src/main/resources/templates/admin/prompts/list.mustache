@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <title>Plant-it Admin - AI Prompts</title>
+    <style>
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; background: #f6f3ed; color: #2f2d2a; }
+        header { padding: 24px 32px; background: #1f1f1f; color: white; display: flex; justify-content: space-between; align-items: center; }
+        main { max-width: 1120px; margin: 0 auto; padding: 32px; }
+        a { color: #167744; text-decoration: none; font-weight: 700; }
+        nav { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+        nav a { padding: 8px 10px; background: white; border-radius: 8px; }
+        .logout { border: 0; padding: 8px 12px; border-radius: 8px; background: #444; color: white; font-weight: 800; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 14px 16px; border-bottom: 1px solid #ece7de; text-align: left; vertical-align: top; }
+        th { background: #ede8df; color: #59544d; font-size: 13px; }
+        .content { max-width: 560px; white-space: pre-wrap; word-break: break-word; }
+        .empty { padding: 40px; background: white; border-radius: 10px; text-align: center; color: #777; }
+    </style>
+</head>
+<body>
+<header>
+    <strong>Plant-it DB Admin</strong>
+    <form method="post" action="/admin/logout"><button class="logout" type="submit">로그아웃</button></form>
+</header>
+<main>
+    <nav>
+        <a href="/admin/guides">식물도감</a>
+        <a href="/admin/prompts">AI 프롬프트</a>
+        <a href="/admin/db/users">사용자</a>
+        <a href="/admin/db/plants">식물</a>
+        <a href="/admin/db/diaries">성장일지</a>
+        <a href="/admin/db/ai-analyses">AI 분석</a>
+        <a href="/admin/db/notification-settings">알림 설정</a>
+        <a href="/admin/db/notification-histories">알림 기록</a>
+    </nav>
+
+    <h1>AI 프롬프트</h1>
+
+    {{#hasPrompts}}
+        <table>
+            <thead>
+            <tr>
+                <th>타입</th>
+                <th>제목</th>
+                <th>내용</th>
+                <th>수정일</th>
+                <th>관리</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#prompts}}
+                <tr>
+                    <td>{{promptType}}</td>
+                    <td>{{title}}</td>
+                    <td class="content">{{content}}</td>
+                    <td>{{updatedAt}}</td>
+                    <td><a href="/admin/prompts/{{promptType}}/edit">수정</a></td>
+                </tr>
+            {{/prompts}}
+            </tbody>
+        </table>
+    {{/hasPrompts}}
+    {{^hasPrompts}}
+        <div class="empty">등록된 프롬프트가 없습니다.</div>
+    {{/hasPrompts}}
+</main>
+</body>
+</html>

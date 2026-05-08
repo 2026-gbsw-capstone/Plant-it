@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <title>Plant-it Admin - Guide Detail</title>
+    <style>
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; background: #f6f3ed; color: #2f2d2a; }
+        header { padding: 24px 32px; background: #1f1f1f; color: white; display: flex; justify-content: space-between; align-items: center; }
+        main { max-width: 920px; margin: 0 auto; padding: 32px; }
+        a { color: #167744; text-decoration: none; font-weight: 700; }
+        .panel { background: white; border-radius: 10px; padding: 24px; display: grid; gap: 14px; }
+        .row { display: grid; grid-template-columns: 160px 1fr; gap: 18px; border-bottom: 1px solid #eee8df; padding-bottom: 12px; }
+        .label { font-weight: 800; color: #686158; }
+        .actions { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
+        button { border: 0; padding: 10px 14px; border-radius: 8px; background: #a33a28; color: white; font-weight: 800; cursor: pointer; }
+        .logout { padding: 8px 12px; background: #444; }
+    </style>
+</head>
+<body>
+<header>
+    <strong>Plant-it DB Admin</strong>
+    <form method="post" action="/admin/logout"><button class="logout" type="submit">로그아웃</button></form>
+</header>
+<main>
+    <p><a href="/admin/guides">목록으로</a></p>
+    <h1>{{guide.speciesName}}</h1>
+
+    <div class="panel">
+        <div class="row"><div class="label">ID</div><div>{{guide.id}}</div></div>
+        <div class="row"><div class="label">난이도</div><div>{{guide.difficulty}}</div></div>
+        <div class="row"><div class="label">이미지 URL</div><div>{{guide.imageUrl}}</div></div>
+        <div class="row"><div class="label">일조</div><div>{{guide.sunlight}}</div></div>
+        <div class="row"><div class="label">물주기</div><div>{{guide.watering}}</div></div>
+        <div class="row"><div class="label">비료</div><div>{{guide.fertilizer}}</div></div>
+        <div class="row"><div class="label">습도</div><div>{{guide.humidity}}</div></div>
+        <div class="row"><div class="label">온도</div><div>{{guide.temperature}}</div></div>
+        <div class="row"><div class="label">독성</div><div>{{guide.toxicity}}</div></div>
+        <div class="row"><div class="label">설명</div><div>{{guide.description}}</div></div>
+    </div>
+
+    <div class="actions">
+        <a href="/admin/guides/{{guide.id}}/edit">수정</a>
+        <form method="post" action="/admin/guides/{{guide.id}}/delete">
+            <button type="submit">삭제</button>
+        </form>
+    </div>
+</main>
+</body>
+</html>

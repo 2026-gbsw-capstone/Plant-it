@@ -20,4 +20,5 @@ public class PlantGuideDetailResponseDto {
     private String temperature;
     private String toxicity;
     private String description;
+    private String imageUrl;
 }

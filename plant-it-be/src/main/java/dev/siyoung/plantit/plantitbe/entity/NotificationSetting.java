@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalTime;
 import java.time.LocalDateTime;
 
 @Entity
@@ -42,6 +43,10 @@ public class NotificationSetting {
 
     @Column(name = "push_token", length = 512)
     private String pushToken;
+
+    @Column(name = "notification_time", nullable = false)
+    @Builder.Default
+    private LocalTime notificationTime = LocalTime.of(9, 0);
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

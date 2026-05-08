@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalTime;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,4 +16,5 @@ public class NotificationSettingResponseDto {
     private Boolean wateringEnabled;
     private Boolean fertilizerEnabled;
     private Boolean growthRecordEnabled;
+    private LocalTime notificationTime;
 }

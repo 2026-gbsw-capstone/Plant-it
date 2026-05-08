@@ -8,6 +8,7 @@ import dev.siyoung.plantit.plantitbe.dto.diary.DiaryDetailResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.diary.DiaryListResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.guide.PlantGuideDetailResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.guide.PlantGuideListResponseDto;
+import dev.siyoung.plantit.plantitbe.dto.notification.NotificationHistoryResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.notification.NotificationSettingResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.plant.CreatePlantRequestDto;
 import dev.siyoung.plantit.plantitbe.dto.plant.CreatePlantResponseDto;
@@ -15,6 +16,7 @@ import dev.siyoung.plantit.plantitbe.dto.plant.PlantDetailResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.plant.PlantListResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.user.MeResponseDto;
 import dev.siyoung.plantit.plantitbe.entity.NotificationSetting;
+import dev.siyoung.plantit.plantitbe.entity.NotificationHistory;
 import dev.siyoung.plantit.plantitbe.entity.Plant;
 import dev.siyoung.plantit.plantitbe.entity.PlantAiAnalysis;
 import dev.siyoung.plantit.plantitbe.entity.PlantCareGuide;
@@ -82,6 +84,18 @@ public final class EntityDtoMapper {
                 .wateringEnabled(setting.getWateringEnabled())
                 .fertilizerEnabled(setting.getFertilizerEnabled())
                 .growthRecordEnabled(setting.getGrowthRecordEnabled())
+                .notificationTime(setting.getNotificationTime())
+                .build();
+    }
+
+    public static NotificationHistoryResponseDto toDto(NotificationHistory history) {
+        return NotificationHistoryResponseDto.builder()
+                .id(history.getId())
+                .plantId(history.getPlant().getId())
+                .plantName(history.getPlant().getName())
+                .notificationType(history.getNotificationType())
+                .notifiedDate(history.getNotifiedDate())
+                .createdAt(history.getCreatedAt())
                 .build();
     }
 
@@ -97,6 +111,7 @@ public final class EntityDtoMapper {
                 .temperature(guide.getTemperature())
                 .toxicity(guide.getToxicity())
                 .description(guide.getDescription())
+                .imageUrl(guide.getImageUrl())
                 .build();
     }
 
