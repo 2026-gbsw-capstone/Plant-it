@@ -18,6 +18,8 @@ part 'home/plants_tab.dart';
 part 'plant/plant_detail_screen.dart';
 part 'encyclopedia/encyclopedia_tab.dart';
 part 'profile/profile_tab.dart';
+part 'profile/settings_screen.dart';
+part 'profile/app_info_screen.dart';
 part 'plant/add_plant_sheet.dart';
 part 'plant/diary_sheet.dart';
 part 'plant/plant_chat_panel.dart';

@@ -81,26 +81,46 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
     return _SheetFrame(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             widget.plant == null ? '식물 추가' : '식물 정보 수정',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 18),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              height: 188,
+              child: widget.plant?.plantImageUrl?.isNotEmpty ?? false
+                  ? _PlantImage(url: widget.plant!.plantImageUrl)
+                  : const _CheckeredTile(),
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _name,
-            decoration: const InputDecoration(hintText: '식물 별명'),
+            decoration: const InputDecoration(
+              labelText: '식물 이름',
+              hintText: '식물 이름',
+            ),
           ),
           const SizedBox(height: 10),
           TextField(
             controller: _species,
-            decoration: const InputDecoration(hintText: '품종'),
+            decoration: const InputDecoration(
+              labelText: '식물 종류',
+              hintText: '식물 종류',
+            ),
           ),
           const SizedBox(height: 10),
           TextField(
             controller: _imageUrl,
-            decoration: const InputDecoration(hintText: '이미지 URL'),
+            decoration: const InputDecoration(
+              labelText: '사진 URL',
+              hintText: '사진 URL',
+            ),
           ),
           const SizedBox(height: 10),
           Row(
@@ -109,7 +129,10 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
                 child: TextField(
                   controller: _watering,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(hintText: '물 주기(일)'),
+                  decoration: const InputDecoration(
+                    labelText: '물 주기',
+                    hintText: '일',
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -117,7 +140,10 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
                 child: TextField(
                   controller: _fertilizer,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(hintText: '비료 주기(일)'),
+                  decoration: const InputDecoration(
+                    labelText: '비료 주기',
+                    hintText: '일',
+                  ),
                 ),
               ),
             ],
@@ -127,7 +153,7 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
             controller: _memo,
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(hintText: '메모'),
+            decoration: const InputDecoration(labelText: '메모', hintText: '메모'),
           ),
           const SizedBox(height: 16),
           _PrimaryButton(

@@ -46,23 +46,32 @@ class _DiarySheetState extends State<DiarySheet> {
     return _SheetFrame(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            '성장 기록 추가',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            '갤러리 등록',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 18),
+          const ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+            child: SizedBox(height: 220, child: _CheckeredTile()),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _imageUrl,
-            decoration: const InputDecoration(hintText: '사진 URL'),
+            decoration: const InputDecoration(
+              labelText: '사진',
+              hintText: '사진 URL',
+            ),
           ),
           const SizedBox(height: 10),
           TextField(
             controller: _note,
             minLines: 3,
             maxLines: 5,
-            decoration: const InputDecoration(hintText: '오늘의 기록'),
+            decoration: const InputDecoration(labelText: '메모', hintText: '메모'),
           ),
           const SizedBox(height: 16),
           _PrimaryButton(

@@ -71,6 +71,32 @@ class _MenuButton extends StatelessWidget {
   }
 }
 
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.title, required this.onBack});
+
+  final String title;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back)),
+        Expanded(
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+          ),
+        ),
+        const SizedBox(width: 48),
+      ],
+    );
+  }
+}
+
 class _HomeDrawer extends StatelessWidget {
   const _HomeDrawer({required this.user, required this.onSelectTab});
 
@@ -140,6 +166,22 @@ class _HomeDrawer extends StatelessWidget {
                 icon: 'assets/icons/user.svg',
                 label: '프로필',
                 onTap: () => onSelectTab(3),
+              ),
+              _DrawerMenuItem(
+                icon: 'assets/icons/gear.svg',
+                label: '설정',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/settings');
+                },
+              ),
+              _DrawerMenuItem(
+                icon: 'assets/icons/book.svg',
+                label: '앱 정보',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/app-info');
+                },
               ),
               const Spacer(),
               _DrawerMenuItem(

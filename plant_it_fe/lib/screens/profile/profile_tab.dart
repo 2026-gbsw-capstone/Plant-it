@@ -45,7 +45,16 @@ class ProfileTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
-        const _MenuTile(icon: 'assets/icons/bell.svg', title: '알림 설정'),
+        _MenuTile(
+          icon: 'assets/icons/gear.svg',
+          title: '설정',
+          onTap: () => context.push('/settings'),
+        ),
+        _MenuTile(
+          icon: 'assets/icons/book.svg',
+          title: '앱 정보',
+          onTap: () => context.push('/app-info'),
+        ),
         const _MenuTile(icon: 'assets/icons/lock-closed.svg', title: '비밀번호 변경'),
         _MenuTile(
           icon: 'assets/icons/back.svg',

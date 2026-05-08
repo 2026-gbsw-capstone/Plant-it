@@ -223,7 +223,13 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           _SegmentTabs(
             selected: _segment,
             labels: const ['성장 일지', '갤러리', 'AI 채팅'],
-            onChanged: (value) => setState(() => _segment = value),
+            onChanged: (value) {
+              if (value == 2) {
+                context.push('/plants/${plant.id}/chat');
+                return;
+              }
+              setState(() => _segment = value);
+            },
           ),
           const SizedBox(height: 16),
           if (_segment == 0)
@@ -236,7 +242,6 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               diaries: data.diaries,
               onAdd: () => _showDiarySheet(plant.id),
             ),
-          if (_segment == 2) PlantChatPanel(plant: plant),
         ],
       ),
     );

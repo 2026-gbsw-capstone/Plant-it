@@ -17,11 +17,27 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(path: '/home', builder: (context, state) => const PlantHomeShell()),
     GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/app-info',
+      builder: (context, state) => const AppInfoScreen(),
+    ),
+    GoRoute(
       path: '/plants/:plantId',
       builder: (context, state) {
         final plantId =
             int.tryParse(state.pathParameters['plantId'] ?? '') ?? 0;
         return PlantDetailScreen(plantId: plantId);
+      },
+    ),
+    GoRoute(
+      path: '/plants/:plantId/chat',
+      builder: (context, state) {
+        final plantId =
+            int.tryParse(state.pathParameters['plantId'] ?? '') ?? 0;
+        return PlantChatScreen(plantId: plantId);
       },
     ),
   ],
