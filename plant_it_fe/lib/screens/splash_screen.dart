@@ -72,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     style: TextStyle(
                       color: PlantItColors.ink,
                       fontSize: 28,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       height: 1.35,
                     ),
                   ),
@@ -94,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         ),
                         child: const Text(
                           '시작',
-                          style: TextStyle(fontWeight: FontWeight.w800),
+                          style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),

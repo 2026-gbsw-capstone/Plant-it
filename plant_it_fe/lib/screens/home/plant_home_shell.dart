@@ -67,7 +67,6 @@ class _PlantHomeShellState extends State<PlantHomeShell> {
             onMenu: _openMenu,
           ),
           const EncyclopediaTab(),
-          ProfileTab(user: data.user),
         ];
 
         return Scaffold(
@@ -101,7 +100,7 @@ class _PlantHomeShellState extends State<PlantHomeShell> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const AddPlantSheet(),
+      builder: (_) => const AddPlantPhotoPickerSheet(),
     ).then((created) {
       if (created == true) _refresh();
     });
@@ -155,7 +154,7 @@ class HomeTab extends StatelessWidget {
             '$greeting,\n${user.nickname}님',
             style: const TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               height: 1.35,
             ),
           ),
@@ -166,7 +165,7 @@ class HomeTab extends StatelessWidget {
           ],
           if (nextPlants.isEmpty)
             _EmptyCard(
-              title: '우리집플스 프로젝트',
+              title: '우리집 풀숲 프로젝트',
               body: '오늘의 식물을 등록하면 이곳에 가장 먼저 보여드릴게요.',
               actionLabel: '식물 등록',
               onAction: onAdd,
@@ -177,33 +176,44 @@ class HomeTab extends StatelessWidget {
               onTap: () => onOpenPlant(nextPlants.first),
             ),
           const SizedBox(height: 24),
-          Row(
-            children: [
-              const Text('오늘의 식물', style: TextStyle(fontSize: 13)),
-              const Spacer(),
-              IconButton(
-                onPressed: onAdd,
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.add, size: 20),
-              ),
-            ],
+          const Text(
+            '물주기가 필요한 식물',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           if (plants.isEmpty)
             const SizedBox.shrink()
           else
-            SizedBox(
-              height: 86,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (_, index) => _MiniPlantCard(
-                  plant: plants[index],
-                  onTap: () => onOpenPlant(plants[index]),
+            Builder(builder: (_) {
+              final now = DateTime.now();
+              final today = DateTime(now.year, now.month, now.day);
+              final needsWater = plants.where((p) {
+                if (p.nextWateringDate == null) return false;
+                final d = p.nextWateringDate!;
+                return DateTime(d.year, d.month, d.day).compareTo(today) <= 0;
+              }).toList();
+              if (needsWater.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    '물주기가 필요한 식물이 없어요 🌿',
+                    style: TextStyle(color: PlantItColors.muted, fontSize: 13),
+                  ),
+                );
+              }
+              return SizedBox(
+                height: 92,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: needsWater.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  itemBuilder: (_, index) => _MiniPlantCard(
+                    plant: needsWater[index],
+                    onTap: () => onOpenPlant(needsWater[index]),
+                  ),
                 ),
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
-                itemCount: plants.length,
-              ),
-            ),
+              );
+            }),
         ],
       ),
     );

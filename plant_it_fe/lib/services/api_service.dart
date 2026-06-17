@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:plant_it_fe/models/plant_ai_analysis_model.dart';
 import 'package:plant_it_fe/models/plant_care_guide_model.dart';
 import 'package:plant_it_fe/models/plant_diary_model.dart';
@@ -75,6 +77,31 @@ class ApiService {
     return data['devCode'] as String?;
   }
 
+  Future<String> verifyPasswordResetCode({
+    required String email,
+    required String code,
+  }) async {
+    final data = await _request<Map<String, dynamic>>(
+      'POST',
+      '/auth/password/reset/verify',
+      body: {'email': email, 'code': code},
+      auth: false,
+    );
+    return data['resetToken'] as String? ?? '';
+  }
+
+  Future<void> resetPassword({
+    required String resetToken,
+    required String newPassword,
+  }) async {
+    await _request<Map<String, dynamic>>(
+      'POST',
+      '/auth/password/reset/confirm',
+      body: {'resetToken': resetToken, 'newPassword': newPassword},
+      auth: false,
+    );
+  }
+
   Future<void> logout() async {
     final refreshToken = await _storage.readRefreshToken();
     if (refreshToken != null && refreshToken.isNotEmpty) {
@@ -87,12 +114,111 @@ class ApiService {
     await _storage.clearTokens();
   }
 
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _request<void>(
+      'PATCH',
+      '/users/me/password',
+      body: {'currentPassword': currentPassword, 'newPassword': newPassword},
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getNotificationHistories() async {
+    final data = await _request<List?>('GET', '/notifications/histories');
+    return (data ?? []).cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> getNotificationSettings() async {
+    final data = await _request<List?>('GET', '/notifications/settings');
+    return (data ?? []).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> updateNotificationSetting({
+    required int plantId,
+    bool? wateringEnabled,
+    bool? fertilizerEnabled,
+    bool? growthRecordEnabled,
+    String? notificationTime,
+  }) async {
+    await _request<void>(
+      'PATCH',
+      '/notifications/settings',
+      body: {
+        'plantId': plantId,
+        if (wateringEnabled != null) 'wateringEnabled': wateringEnabled,
+        if (fertilizerEnabled != null) 'fertilizerEnabled': fertilizerEnabled,
+        if (growthRecordEnabled != null) 'growthRecordEnabled': growthRecordEnabled,
+        if (notificationTime != null) 'notificationTime': notificationTime,
+      },
+    );
+  }
+
+  Future<void> deleteAccount(String password) async {
+    await _request<void>(
+      'DELETE',
+      '/users/me',
+      body: {'password': password},
+    );
+    await _storage.clearTokens();
+  }
+
+  Future<void> resetData(String password) async {
+    await _request<void>(
+      'DELETE',
+      '/users/me/data',
+      body: {'password': password},
+    );
+  }
+
   Future<void> registerPushToken(String pushToken) async {
     await _request<void>(
       'POST',
       '/notifications/token',
       body: {'pushToken': pushToken},
     );
+  }
+
+  Future<String> uploadImageFile({
+    required String filePath,
+    required String type,
+  }) async {
+    final uri = Uri.parse('$baseUrl/uploads/images');
+    final request = http.MultipartRequest('POST', uri)..fields['type'] = type;
+
+    final token = await _storage.readAccessToken();
+    if (token != null && token.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        filePath,
+        contentType: _imageContentType(filePath),
+      ),
+    );
+
+    final streamed = await _client.send(request);
+    final response = await http.Response.fromStream(streamed);
+    final decoded = _decodeResponse(response);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(
+        decoded['message'] as String? ??
+            _defaultErrorMessage(response.statusCode),
+      );
+    }
+    if (decoded.containsKey('success') && decoded['success'] != true) {
+      throw ApiException(decoded['message'] as String? ?? '업로드에 실패했습니다.');
+    }
+
+    final data = decoded['data'];
+    if (data is Map<String, dynamic>) {
+      final imageUrl = data['imageUrl'] as String?;
+      if (imageUrl != null && imageUrl.isNotEmpty) return imageUrl;
+    }
+    throw ApiException('업로드 URL을 확인하지 못했습니다.');
   }
 
   Future<UserModel> getMe() async {
@@ -228,16 +354,52 @@ class ApiService {
         .toList();
   }
 
+  Future<PlantCareGuideModel> getGuide(int guideId) async {
+    final data = await _request<Map<String, dynamic>>(
+      'GET',
+      '/guide/plants/$guideId',
+    );
+    return PlantCareGuideModel.fromJson(data);
+  }
+
+  Future<IdentifyPlantResponseModel> identifyPlant({
+    required String imageUrl,
+  }) async {
+    final data = await _request<Map<String, dynamic>>(
+      'POST',
+      '/ai/plants/identify',
+      body: {'imageUrl': imageUrl},
+    );
+    return IdentifyPlantResponseModel.fromJson(data);
+  }
+
   Future<ChatResponseModel> chat({
     required int plantId,
     required String question,
+    String? imageUrl,
   }) async {
     final data = await _request<Map<String, dynamic>>(
       'POST',
       '/ai/chat',
-      body: {'plantId': plantId, 'question': question},
+      body: {
+        'plantId': plantId,
+        'question': question,
+        'imageUrl': _emptyToNull(imageUrl),
+      },
     );
     return ChatResponseModel.fromJson(data);
+  }
+
+  Future<HealthCheckResponseModel> healthCheck({
+    required int plantId,
+    required String imageUrl,
+  }) async {
+    final data = await _request<Map<String, dynamic>>(
+      'POST',
+      '/ai/plants/health-check',
+      body: {'plantId': plantId, 'imageUrl': imageUrl},
+    );
+    return HealthCheckResponseModel.fromJson(data);
   }
 
   Future<T> _request<T>(
@@ -268,18 +430,47 @@ class ApiService {
       _ => throw ApiException('지원하지 않는 HTTP 메서드입니다.'),
     };
 
-    final decoded = response.body.isEmpty
-        ? <String, dynamic>{}
-        : jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    final decoded = _decodeResponse(response);
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException(decoded['message'] as String? ?? '요청에 실패했습니다.');
+      throw ApiException(
+        decoded['message'] as String? ??
+            _defaultErrorMessage(response.statusCode),
+      );
     }
     if (decoded.containsKey('success') && decoded['success'] != true) {
       throw ApiException(decoded['message'] as String? ?? '요청에 실패했습니다.');
     }
     final data = decoded.containsKey('data') ? decoded['data'] : decoded;
-    if (data == null) return null as T;
+    if (data == null || T == Null || T.toString() == 'void') return null as T;
     return data as T;
+  }
+
+  static Map<String, dynamic> _decodeResponse(http.Response response) {
+    final body = utf8.decode(response.bodyBytes).trim();
+    if (body.isEmpty) return <String, dynamic>{};
+
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } on FormatException {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        rethrow;
+      }
+    }
+
+    return <String, dynamic>{
+      'message': _defaultErrorMessage(response.statusCode),
+    };
+  }
+
+  static String _defaultErrorMessage(int statusCode) {
+    if (statusCode == 502) {
+      return '서버 연결이 불안정합니다. 잠시 후 다시 시도해주세요.';
+    }
+    if (statusCode >= 500) {
+      return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    }
+    return '요청에 실패했습니다.';
   }
 
   static Map<String, dynamic> _withoutNulls(Map<String, dynamic> value) {
@@ -289,6 +480,17 @@ class ApiService {
   static String? _emptyToNull(String? value) {
     final trimmed = value?.trim();
     return trimmed == null || trimmed.isEmpty ? null : trimmed;
+  }
+
+  static MediaType _imageContentType(String filePath) {
+    final extension = filePath.split('.').last.toLowerCase();
+    return switch (extension) {
+      'png' => MediaType('image', 'png'),
+      'webp' => MediaType('image', 'webp'),
+      'heic' => MediaType('image', 'heic'),
+      'heif' => MediaType('image', 'heif'),
+      _ => MediaType('image', 'jpeg'),
+    };
   }
 }
 

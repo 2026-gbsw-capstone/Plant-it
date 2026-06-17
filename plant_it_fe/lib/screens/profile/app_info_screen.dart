@@ -3,42 +3,70 @@ part of '../app_screen.dart';
 class AppInfoScreen extends StatelessWidget {
   const AppInfoScreen({super.key});
 
+  static const _webBase = 'https://growve.siyoung.dev';
+
+  Future<void> _openLink(String path) async {
+    final uri = Uri.parse('$_webBase/#$path');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 34, 16, 28),
+          padding: EdgeInsets.zero,
           children: [
-            _TopBar(title: '앱 정보', onBack: () => context.pop()),
-            const SizedBox(height: 68),
-            Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: Image.asset(
-                  'assets/images/figma/plant_pot.jpg',
-                  width: 118,
-                  height: 118,
-                  fit: BoxFit.cover,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 34, 16, 0),
+              child: _TopBar(title: '앱 정보', onBack: () => context.pop()),
+            ),
+            const SizedBox(height: 40),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Growve',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'Version 1.0.0',
+                    style: TextStyle(fontSize: 14, color: PlantItColors.muted),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    '문의: app-master@siyoung.dev',
+                    style: TextStyle(fontSize: 14, color: PlantItColors.text),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                '약관 및 정책',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: PlantItColors.muted,
                 ),
               ),
             ),
-            const SizedBox(height: 22),
-            const Text(
-              'Plant-it',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
+            const SizedBox(height: 4),
+            _LegalLinkRow(label: '서비스 이용약관', onTap: () => _openLink('/terms')),
+            _LegalLinkRow(label: '개인정보 처리방침', onTap: () => _openLink('/privacy')),
+            _LegalLinkRow(
+              label: '개인정보 제3자 제공 동의',
+              onTap: () => _openLink('/third-party'),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              '반려식물과 함께하는 성장 기록',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: PlantItColors.muted, fontSize: 13),
+            _LegalLinkRow(
+              label: '개인정보 국외 이전 동의',
+              onTap: () => _openLink('/overseas'),
             ),
-            const SizedBox(height: 46),
-            const _InfoLine(label: '버전', value: '1.0.0'),
-            const _InfoLine(label: '개발', value: 'Plant-it Capstone'),
-            const _InfoLine(label: '문의', value: 'capstone-ec2.siyoung.dev'),
           ],
         ),
       ),
@@ -46,25 +74,33 @@ class AppInfoScreen extends StatelessWidget {
   }
 }
 
-class _InfoLine extends StatelessWidget {
-  const _InfoLine({required this.label, required this.value});
+class _LegalLinkRow extends StatelessWidget {
+  const _LegalLinkRow({required this.label, required this.onTap});
 
   final String label;
-  final String value;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 56,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: PlantItColors.line)),
-      ),
-      child: Row(
-        children: [
-          Text(label, style: const TextStyle(color: PlantItColors.muted)),
-          const Spacer(),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
-        ],
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 15, color: PlantItColors.text),
+              ),
+            ),
+            const Icon(
+              Icons.open_in_new,
+              size: 18,
+              color: PlantItColors.muted,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -21,6 +22,7 @@ public class PlantDetailResponseDto {
     private Integer fertilizerCycleDays;
     private LocalDateTime lastWateredAt;
     private LocalDateTime lastFertilizedAt;
+    private LocalDate nextWateringDate;
     private HealthStatus healthStatus;
     private String memo;
 }

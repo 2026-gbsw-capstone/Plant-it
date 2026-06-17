@@ -88,7 +88,7 @@ class _TopBar extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(width: 48),
@@ -128,7 +128,7 @@ class _HomeDrawer extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -165,7 +165,10 @@ class _HomeDrawer extends StatelessWidget {
               _DrawerMenuItem(
                 icon: 'assets/icons/user.svg',
                 label: '프로필',
-                onTap: () => onSelectTab(3),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/profile');
+                },
               ),
               _DrawerMenuItem(
                 icon: 'assets/icons/gear.svg',
@@ -280,7 +283,7 @@ class _AlertBanner extends StatelessWidget {
                 style: const TextStyle(
                   color: PlantItColors.alertText,
                   fontSize: 12,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -321,19 +324,37 @@ class _TodayProjectCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Spacer(),
-                  const Text(
-                    '우리집플스 프로젝트',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  Text(
+                    plant.name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    plant.speciesLabel,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: PlantItColors.muted,
+                    ),
                   ),
                   const Spacer(),
-                  const Text(
-                    '오늘의 식물',
-                    style: TextStyle(fontSize: 12, color: PlantItColors.muted),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    plant.wateringLabel,
-                    style: const TextStyle(fontSize: 13),
+                  Row(
+                    children: [
+                      const Text(
+                        '오늘의 식물',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: PlantItColors.muted,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        plant.wateringLabel,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -390,7 +411,7 @@ class _MiniPlantCard extends StatelessWidget {
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
                 ),
               ),
@@ -446,7 +467,7 @@ class _PlantGridCard extends StatelessWidget {
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
                 shadows: [Shadow(color: Colors.black87, blurRadius: 8)],
               ),
             ),
@@ -507,135 +528,164 @@ class _CheckeredPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _DiaryList extends StatelessWidget {
-  const _DiaryList({required this.diaries, required this.onAdd});
+class _ImagePickerPanel extends StatelessWidget {
+  const _ImagePickerPanel({
+    required this.imagePath,
+    required this.emptyLabel,
+    required this.onCamera,
+    required this.onGallery,
+    required this.onFile,
+    required this.onClear,
+    this.height = 188,
+  });
 
-  final List<PlantDiaryModel> diaries;
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    if (diaries.isEmpty) {
-      return _EmptyCard(
-        title: '성장 기록이 없어요',
-        body: '사진과 메모로 오늘의 변화를 남겨보세요.',
-        actionLabel: '기록 추가',
-        onAction: onAdd,
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: const Text('기록 추가'),
-          ),
-        ),
-        for (final diary in diaries) _DiaryTile(diary: diary),
-      ],
-    );
-  }
-}
-
-class _DiaryTile extends StatelessWidget {
-  const _DiaryTile({required this.diary});
-
-  final PlantDiaryModel diary;
+  final String imagePath;
+  final String emptyLabel;
+  final VoidCallback onCamera;
+  final VoidCallback onGallery;
+  final VoidCallback onFile;
+  final VoidCallback? onClear;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = imagePath.trim().isNotEmpty;
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: _cardDecoration(radius: 16),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: PlantItColors.paper,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: PlantItColors.line),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _dateLabel(diary.recordedAt),
-            style: const TextStyle(
-              color: PlantItColors.green,
-              fontWeight: FontWeight.w700,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              height: height,
+              width: double.infinity,
+              child: hasImage
+                  ? _PlantImage(url: imagePath)
+                  : Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        const _CheckeredTile(),
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.add_a_photo_outlined,
+                                color: PlantItColors.green,
+                                size: 30,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                emptyLabel,
+                                style: const TextStyle(
+                                  color: PlantItColors.muted,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            diary.note?.isEmpty ?? true ? '메모 없음' : diary.note!,
-            style: const TextStyle(height: 1.5),
-          ),
-          if (diary.aiHealthSummary != null &&
-              diary.aiHealthSummary!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              diary.aiHealthSummary!,
-              style: const TextStyle(
-                color: PlantItColors.muted,
-                fontSize: 12,
-                height: 1.5,
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _PickerActionButton(
+                  icon: Icons.photo_camera_outlined,
+                  label: '카메라',
+                  onTap: onCamera,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: _PickerActionButton(
+                  icon: Icons.photo_library_outlined,
+                  label: '앨범',
+                  onTap: onGallery,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _PickerActionButton(
+                  icon: Icons.folder_open_outlined,
+                  label: '파일',
+                  onTap: onFile,
+                ),
+              ),
+              if (onClear != null) ...[
+                const SizedBox(width: 8),
+                _SquareIconButton(icon: Icons.close, onTap: onClear!),
+              ],
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _GalleryGrid extends StatelessWidget {
-  const _GalleryGrid({required this.diaries, required this.onAdd});
+class _PickerActionButton extends StatelessWidget {
+  const _PickerActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
-  final List<PlantDiaryModel> diaries;
-  final VoidCallback onAdd;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final images = diaries
-        .where((diary) => diary.imageUrl?.isNotEmpty ?? false)
-        .toList();
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: PlantItColors.green,
+        side: const BorderSide(color: PlantItColors.line),
+        minimumSize: const Size(0, 44),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
       ),
-      itemCount: images.length + 1,
-      itemBuilder: (_, index) {
-        if (index == 0) {
-          return InkWell(
-            onTap: onAdd,
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              decoration: BoxDecoration(
-                color: PlantItColors.greenSoft,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: PlantItColors.green.withValues(alpha: .18),
-                ),
-              ),
-              child: const Icon(
-                Icons.add_a_photo_outlined,
-                color: PlantItColors.green,
-              ),
-            ),
-          );
-        }
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: _PlantImage(
-            url: images[index - 1].imageUrl,
-            fit: BoxFit.cover,
-          ),
-        );
-      },
     );
   }
 }
+
+class _SquareIconButton extends StatelessWidget {
+  const _SquareIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: IconButton.outlined(
+        onPressed: onTap,
+        icon: Icon(icon, size: 18),
+        color: PlantItColors.muted,
+        style: IconButton.styleFrom(
+          side: const BorderSide(color: PlantItColors.line),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+    );
+  }
+}
+
+
 
 class _EncyclopediaCard extends StatelessWidget {
   const _EncyclopediaCard({required this.guide});
@@ -672,7 +722,7 @@ class _EncyclopediaCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  guide.description ?? '난이도 ${guide.difficulty}',
+                  guide.description ?? guide.watering ?? guide.sunlight ?? '',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -690,19 +740,21 @@ class _EncyclopediaCard extends StatelessWidget {
 }
 
 class _MenuTile extends StatelessWidget {
-  const _MenuTile({required this.icon, required this.title, this.onTap});
+  const _MenuTile({required this.icon, required this.title, this.onTap, this.titleColor});
 
   final String icon;
   final String title;
   final VoidCallback? onTap;
+  final Color? titleColor;
 
   @override
   Widget build(BuildContext context) {
+    final color = titleColor ?? PlantItColors.text;
     return ListTile(
       onTap: onTap,
-      leading: _NavIcon(icon, color: PlantItColors.text),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-      trailing: const Icon(Icons.chevron_right),
+      leading: _NavIcon(icon, color: color),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.w500, color: color)),
+      trailing: Icon(Icons.chevron_right, color: color),
       shape: const Border(bottom: BorderSide(color: PlantItColors.line)),
     );
   }
@@ -756,70 +808,23 @@ class _PrimaryButton extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: PlantItColors.green,
         foregroundColor: Colors.white,
-        minimumSize: Size(expanded ? double.infinity : 116, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        minimumSize: Size(expanded ? double.infinity : 124, 52),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+        elevation: 0,
       ),
-      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0,
+        ),
+      ),
     );
     return expanded ? SizedBox(width: double.infinity, child: button) : button;
   }
 }
 
-class _SegmentTabs extends StatelessWidget {
-  const _SegmentTabs({
-    required this.selected,
-    required this.labels,
-    required this.onChanged,
-  });
-
-  final int selected;
-  final List<String> labels;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 42,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: PlantItColors.paper,
-        borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: PlantItColors.line),
-      ),
-      child: Row(
-        children: [
-          for (var index = 0; index < labels.length; index++)
-            Expanded(
-              child: InkWell(
-                onTap: () => onChanged(index),
-                borderRadius: BorderRadius.circular(18),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: selected == index
-                        ? PlantItColors.green
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Text(
-                    labels[index],
-                    style: TextStyle(
-                      color: selected == index
-                          ? Colors.white
-                          : PlantItColors.ink,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
 
 class _EmptyCard extends StatelessWidget {
   const _EmptyCard({
@@ -962,28 +967,27 @@ class _PlantBottomNav extends StatelessWidget {
     ('assets/icons/home.svg', '홈'),
     ('assets/icons/plant.svg', '내 식물'),
     ('assets/icons/book.svg', '도감'),
-    ('assets/icons/user.svg', 'MY'),
   ];
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+      minimum: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Center(
         heightFactor: 1,
         child: Container(
           height: 58,
           constraints: const BoxConstraints(maxWidth: 330),
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(5),
           decoration: BoxDecoration(
             color: PlantItColors.paper,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(29),
             border: Border.all(color: PlantItColors.line),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x1A000000),
+                color: Color(0x12000000),
                 blurRadius: 18,
-                offset: Offset(0, 8),
+                offset: Offset(0, 7),
               ),
             ],
           ),
@@ -1026,8 +1030,8 @@ class _PlantBottomNavItem extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        height: 50,
+        duration: const Duration(milliseconds: 200),
+        height: 48,
         decoration: BoxDecoration(
           color: selected ? PlantItColors.ink : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
@@ -1036,7 +1040,7 @@ class _PlantBottomNavItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _NavIcon(icon, color: foreground),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
               label,
               maxLines: 1,
@@ -1045,6 +1049,7 @@ class _PlantBottomNavItem extends StatelessWidget {
                 color: foreground,
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
+                letterSpacing: 0,
               ),
             ),
           ],
@@ -1055,17 +1060,18 @@ class _PlantBottomNavItem extends StatelessWidget {
 }
 
 class _NavIcon extends StatelessWidget {
-  const _NavIcon(this.asset, {this.color});
+  const _NavIcon(this.asset, {this.color, this.size = 24});
 
   final String asset;
   final Color? color;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return SvgPicture.asset(
       asset,
-      width: 22,
-      height: 22,
+      width: size,
+      height: size,
       colorFilter: color == null
           ? null
           : ColorFilter.mode(color!, BlendMode.srcIn),
@@ -1083,6 +1089,17 @@ class _PlantImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final value = url?.trim();
     if (value != null && value.isNotEmpty) {
+      final uri = Uri.tryParse(value);
+      final isRemote =
+          uri?.hasScheme == true &&
+          (uri!.scheme == 'http' || uri.scheme == 'https');
+      if (!isRemote) {
+        return Image.file(
+          File(value),
+          fit: fit,
+          errorBuilder: (_, _, _) => Image.asset(_fallbackPlantImage, fit: fit),
+        );
+      }
       return Image.network(
         value,
         fit: fit,
@@ -1106,21 +1123,21 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-BoxDecoration _cardDecoration({double radius = 20}) {
+BoxDecoration _cardDecoration({double radius = 24}) {
   return BoxDecoration(
     color: PlantItColors.paper,
     borderRadius: BorderRadius.circular(radius),
-    border: Border.all(color: PlantItColors.line),
+    border: Border.all(color: PlantItColors.line, width: 1.2),
     boxShadow: const [
-      BoxShadow(color: Color(0x0F000000), blurRadius: 16, offset: Offset(0, 8)),
+      BoxShadow(
+        color: Color(0x0D000000),
+        blurRadius: 24,
+        offset: Offset(0, 12),
+      ),
     ],
   );
 }
 
-String _dateLabel(DateTime? date) {
-  if (date == null) return '날짜 없음';
-  return '${date.month}월 ${date.day}일';
-}
 
 String _timeGreeting(DateTime dateTime) {
   final hour = dateTime.hour;
@@ -1141,4 +1158,145 @@ bool _needsHelp(PlantModel plant) {
     date.day,
   ).difference(DateTime(today.year, today.month, today.day)).inDays;
   return diff <= 0;
+}
+
+class _ConfirmThenPasswordDialog extends StatefulWidget {
+  const _ConfirmThenPasswordDialog({
+    required this.title,
+    required this.confirmMessage,
+    required this.passwordMessage,
+    required this.actionLabel,
+    required this.actionColor,
+    required this.onConfirm,
+    required this.onSuccess,
+  });
+
+  final String title;
+  final String confirmMessage;
+  final String passwordMessage;
+  final String actionLabel;
+  final Color actionColor;
+  final Future<void> Function(String password) onConfirm;
+  final void Function(BuildContext context) onSuccess;
+
+  @override
+  State<_ConfirmThenPasswordDialog> createState() =>
+      _ConfirmThenPasswordDialogState();
+}
+
+class _ConfirmThenPasswordDialogState
+    extends State<_ConfirmThenPasswordDialog> {
+  bool _step2 = false;
+  bool _loading = false;
+  bool _obscure = true;
+  final _pw = TextEditingController();
+
+  @override
+  void dispose() {
+    _pw.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: const Color(0xFFF5F0E8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              _step2 ? widget.passwordMessage : widget.confirmMessage,
+              style: const TextStyle(fontSize: 14, height: 1.5),
+            ),
+            if (_step2) ...[
+              const SizedBox(height: 14),
+              const Text(
+                '비밀번호',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _pw,
+                obscureText: _obscure,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: '...',
+                  suffixIcon: IconButton(
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: PlantItColors.muted,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 22),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    '취소',
+                    style: TextStyle(color: PlantItColors.muted),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: _loading ? null : _onAction,
+                  child: _loading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          widget.actionLabel,
+                          style: TextStyle(
+                            color: widget.actionColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onAction() async {
+    if (!_step2) {
+      setState(() => _step2 = true);
+      return;
+    }
+    final password = _pw.text.trim();
+    if (password.isEmpty) return;
+
+    setState(() => _loading = true);
+    try {
+      await widget.onConfirm(password);
+      if (mounted) widget.onSuccess(context);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString())),
+        );
+        setState(() => _loading = false);
+      }
+    }
+  }
 }

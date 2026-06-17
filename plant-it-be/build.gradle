@@ -43,3 +43,8 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.named('bootRun') {
+    systemProperty 'springdoc.swagger-ui.enabled', 'true'
+    systemProperty 'springdoc.api-docs.enabled', 'true'
+}

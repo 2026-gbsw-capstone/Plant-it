@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PlantGuideSearchRequestDto {
     private String keyword;
-    private String difficulty;
     private String sunlight;
 }

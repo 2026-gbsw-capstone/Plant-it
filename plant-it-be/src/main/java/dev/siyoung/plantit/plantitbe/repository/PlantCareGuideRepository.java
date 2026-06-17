@@ -13,9 +13,8 @@ public interface PlantCareGuideRepository extends JpaRepository<PlantCareGuide, 
             where (:keyword is null
                    or lower(g.speciesName) like lower(concat('%', :keyword, '%'))
                    or lower(g.description) like lower(concat('%', :keyword, '%')))
-              and (:difficulty is null or lower(g.difficulty) = lower(:difficulty))
               and (:sunlight is null or lower(g.sunlight) like lower(concat('%', :sunlight, '%')))
             order by g.speciesName asc
             """)
-    List<PlantCareGuide> search(String keyword, String difficulty, String sunlight);
+    List<PlantCareGuide> search(String keyword, String sunlight);
 }

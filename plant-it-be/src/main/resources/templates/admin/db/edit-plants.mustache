@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <title>Plant-it Admin - Plant Edit</title>
+    <style>
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; background: #f6f3ed; color: #2f2d2a; }
+        header { padding: 24px 32px; background: #1f1f1f; color: white; display: flex; justify-content: space-between; align-items: center; }
+        main { max-width: 860px; margin: 0 auto; padding: 32px; }
+        a { color: #167744; text-decoration: none; font-weight: 700; }
+        form { background: white; padding: 24px; border-radius: 10px; display: grid; gap: 18px; }
+        label { display: grid; gap: 8px; font-weight: 700; }
+        input, select, textarea { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #d8d1c7; border-radius: 8px; font: inherit; }
+        .actions { display: flex; gap: 10px; align-items: center; }
+        button { border: 0; padding: 11px 16px; border-radius: 8px; background: #28a362; color: white; font-weight: 800; cursor: pointer; }
+        .logout { padding: 8px 12px; background: #444; }
+        .secondary { color: #666; }
+    </style>
+</head>
+<body>
+<header>
+    <strong>Plant-it DB Admin</strong>
+    <form method="post" action="/admin/logout"><button class="logout" type="submit">로그아웃</button></form>
+</header>
+<main>
+    <p><a href="/admin/db/plants">목록으로</a></p>
+    <h1>식물 수정</h1>
+
+    <form method="post" action="/admin/db/plants/{{id}}">
+        {{#data}}
+            <label>식물 이름
+                <input name="name" value="{{name}}" required>
+            </label>
+            <label>종 이름
+                <input name="speciesName" value="{{speciesName}}">
+            </label>
+            <label>건강 상태
+                <select name="healthStatus">
+                    <option value="GOOD">GOOD</option>
+                    <option value="WARNING">WARNING</option>
+                    <option value="DANGER">DANGER</option>
+                </select>
+            </label>
+            <label>물주기 주기 (일)
+                <input type="number" name="wateringCycleDays" value="{{wateringCycleDays}}">
+            </label>
+            <label>비료 주기 (일)
+                <input type="number" name="fertilizerCycleDays" value="{{fertilizerCycleDays}}">
+            </label>
+            <label>메모
+                <textarea name="memo">{{memo}}</textarea>
+            </label>
+        {{/data}}
+        <div class="actions">
+            <button type="submit">저장</button>
+            <a class="secondary" href="/admin/db/plants">취소</a>
+        </div>
+    </form>
+    <script>
+        // Set healthStatus value
+        {{#data}}
+        document.querySelector('select[name="healthStatus"]').value = "{{healthStatus}}";
+        {{/data}}
+    </script>
+</main>
+</body>
+</html>

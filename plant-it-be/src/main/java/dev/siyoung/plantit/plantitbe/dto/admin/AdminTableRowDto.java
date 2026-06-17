@@ -13,6 +13,7 @@ import java.util.List;
 @Builder
 public class AdminTableRowDto {
     private Long id;
+    private String editUrl;
     private String deleteUrl;
     private List<AdminTableCellDto> cells;
 }

@@ -26,9 +26,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         return uri.startsWith("/admin")
                 || uri.startsWith("/api/v1/auth")
+                || uri.startsWith("/api/v1/uploads")
                 || uri.startsWith("/api-docs")
                 || uri.startsWith("/swagger-ui")
-                || uri.equals("/swagger-ui.html");
+                || uri.startsWith("/uploads")
+                || uri.startsWith("/images")
+                || uri.endsWith(".png")
+                || uri.endsWith(".jpg")
+                || uri.endsWith(".jpeg")
+                || uri.endsWith(".gif")
+                || uri.endsWith(".webp")
+                || uri.equals("/favicon.ico");
     }
 
     @Override

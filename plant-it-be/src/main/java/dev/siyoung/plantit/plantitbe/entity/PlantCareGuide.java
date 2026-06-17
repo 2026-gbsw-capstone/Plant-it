@@ -23,8 +23,11 @@ public class PlantCareGuide {
     @Column(name = "species_name", nullable = false, unique = true, length = 100)
     private String speciesName;
 
-    @Column(nullable = false, length = 20)
-    private String difficulty;
+    @Column(length = 100)
+    private String size;
+
+    @Column(length = 100)
+    private String lifespan;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String sunlight;

@@ -15,4 +15,6 @@ public class ChatRequestDto {
 
     @NotBlank(message = "질문은 필수입니다.")
     private String question;
+
+    private String imageUrl;
 }

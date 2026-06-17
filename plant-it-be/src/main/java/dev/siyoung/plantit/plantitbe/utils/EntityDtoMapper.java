@@ -50,6 +50,7 @@ public final class EntityDtoMapper {
                 .fertilizerCycleDays(plant.getFertilizerCycleDays())
                 .lastWateredAt(plant.getLastWateredAt())
                 .lastFertilizedAt(plant.getLastFertilizedAt())
+                .nextWateringDate(calculateNextWateringDate(plant))
                 .healthStatus(plant.getHealthStatus())
                 .memo(plant.getMemo())
                 .build();
@@ -103,7 +104,8 @@ public final class EntityDtoMapper {
         return PlantGuideDetailResponseDto.builder()
                 .id(guide.getId())
                 .speciesName(guide.getSpeciesName())
-                .difficulty(guide.getDifficulty())
+                .size(guide.getSize())
+                .lifespan(guide.getLifespan())
                 .sunlight(guide.getSunlight())
                 .watering(guide.getWatering())
                 .fertilizer(guide.getFertilizer())
@@ -158,7 +160,6 @@ public final class EntityDtoMapper {
         return PlantGuideListResponseDto.builder()
                 .id(guide.getId())
                 .speciesName(guide.getSpeciesName())
-                .difficulty(guide.getDifficulty())
                 .imageUrl(guide.getImageUrl())
                 .build();
     }

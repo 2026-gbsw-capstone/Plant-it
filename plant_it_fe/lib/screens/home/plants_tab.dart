@@ -51,7 +51,7 @@ class _PlantsTabState extends State<PlantsTab> {
           const SizedBox(height: 18),
           const Text(
             '내 식물',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 22),
           TextField(
@@ -79,9 +79,8 @@ class _PlantsTabState extends State<PlantsTab> {
                 mainAxisSpacing: 10,
                 childAspectRatio: .93,
               ),
-              itemCount: plants.length + 1,
+              itemCount: plants.length,
               itemBuilder: (context, index) {
-                if (index == plants.length) return const _CheckeredTile();
                 final plant = plants[index];
                 return _PlantGridCard(
                   plant: plant,

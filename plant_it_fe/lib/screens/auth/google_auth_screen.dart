@@ -45,7 +45,7 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
                   child: Text(
                     '회원가입',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                   ),
                 ),
                 const SizedBox(width: 48),
@@ -57,7 +57,7 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 22,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 height: 1.35,
               ),
             ),
@@ -95,7 +95,7 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
                         style: TextStyle(
                           color: Color(0xFF4285F4),
                           fontSize: 22,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),

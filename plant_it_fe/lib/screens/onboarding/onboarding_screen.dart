@@ -13,6 +13,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _next() {
     if (_page == 1) {
+      // 슬라이드 끝 → 로그인/회원가입으로
       context.go('/auth');
       return;
     }
@@ -21,6 +22,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       curve: Curves.easeOut,
     );
   }
+
+  void _skip() => context.go('/auth');
 
   @override
   Widget build(BuildContext context) {

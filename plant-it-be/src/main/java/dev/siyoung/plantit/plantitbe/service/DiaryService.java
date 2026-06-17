@@ -38,7 +38,7 @@ public class DiaryService {
 
     @Transactional(readOnly = true)
     public List<DiaryListResponseDto> findDiaries(Long userId, Long plantId) {
-        return plantDiaryRepository.findByPlantIdAndPlantUserId(plantId, userId).stream()
+        return plantDiaryRepository.findByPlantIdAndPlantUserIdOrderByRecordedAtAsc(plantId, userId).stream()
                 .map(EntityDtoMapper::toListDto)
                 .toList();
     }

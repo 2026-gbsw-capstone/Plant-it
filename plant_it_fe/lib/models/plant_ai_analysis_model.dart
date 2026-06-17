@@ -29,3 +29,20 @@ class HealthCheckResponseModel {
     );
   }
 }
+
+class IdentifyPlantResponseModel {
+  const IdentifyPlantResponseModel({
+    required this.speciesName,
+    required this.confidence,
+  });
+
+  final String speciesName;
+  final double confidence;
+
+  factory IdentifyPlantResponseModel.fromJson(Map<String, dynamic> json) {
+    return IdentifyPlantResponseModel(
+      speciesName: json['speciesName'] as String? ?? '',
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
