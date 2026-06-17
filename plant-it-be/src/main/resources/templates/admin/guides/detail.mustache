@@ -6,12 +6,12 @@
     <style>
         body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; background: #f6f3ed; color: #2f2d2a; }
         header { padding: 24px 32px; background: #1f1f1f; color: white; display: flex; justify-content: space-between; align-items: center; }
-        main { max-width: 920px; margin: 0 auto; padding: 32px; }
+        main { max-width: 1000px; margin: 0 auto; padding: 32px; }
         a { color: #167744; text-decoration: none; font-weight: 700; }
-        .panel { background: white; border-radius: 10px; padding: 24px; display: grid; gap: 14px; }
-        .row { display: grid; grid-template-columns: 160px 1fr; gap: 18px; border-bottom: 1px solid #eee8df; padding-bottom: 12px; }
-        .label { font-weight: 800; color: #686158; }
-        .actions { margin-top: 20px; display: flex; gap: 10px; align-items: center; }
+        .card { background: white; padding: 32px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .care-item { background: #f9f7f2; padding: 20px; border-radius: 10px; }
+        .care-item h4 { margin-top: 0; color: #167744; }
+        .actions { display: flex; gap: 10px; margin-top: 32px; align-items: center; }
         button { border: 0; padding: 10px 14px; border-radius: 8px; background: #a33a28; color: white; font-weight: 800; cursor: pointer; }
         .logout { padding: 8px 12px; background: #444; }
     </style>
@@ -23,25 +23,58 @@
 </header>
 <main>
     <p><a href="/admin/guides">목록으로</a></p>
-    <h1>{{guide.speciesName}}</h1>
 
-    <div class="panel">
-        <div class="row"><div class="label">ID</div><div>{{guide.id}}</div></div>
-        <div class="row"><div class="label">난이도</div><div>{{guide.difficulty}}</div></div>
-        <div class="row"><div class="label">이미지 URL</div><div>{{guide.imageUrl}}</div></div>
-        <div class="row"><div class="label">일조</div><div>{{guide.sunlight}}</div></div>
-        <div class="row"><div class="label">물주기</div><div>{{guide.watering}}</div></div>
-        <div class="row"><div class="label">비료</div><div>{{guide.fertilizer}}</div></div>
-        <div class="row"><div class="label">습도</div><div>{{guide.humidity}}</div></div>
-        <div class="row"><div class="label">온도</div><div>{{guide.temperature}}</div></div>
-        <div class="row"><div class="label">독성</div><div>{{guide.toxicity}}</div></div>
-        <div class="row"><div class="label">설명</div><div>{{guide.description}}</div></div>
+    <div class="card">
+        {{#guide}}
+            <div style="display: flex; gap: 32px; align-items: flex-start;">
+                {{#imageUrl}}
+                    <img src="{{imageUrl}}" style="width: 300px; height: 300px; object-fit: cover; border-radius: 12px; border: 1px solid #eee;">
+                {{/imageUrl}}
+                {{^imageUrl}}
+                    <div style="width: 300px; height: 300px; background: #f0f0f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #aaa;">No Image</div>
+                {{/imageUrl}}
+                <div style="flex: 1;">
+                    <h1 style="margin-top: 0;">{{speciesName}}</h1>
+                    <div style="display: flex; gap: 20px; color: #666; margin-bottom: 20px;">
+                        <span><strong>크기:</strong> {{#size}}{{size}}{{/size}}{{^size}}-{{/size}}</span>
+                        <span><strong>수명:</strong> {{#lifespan}}{{lifespan}}{{/lifespan}}{{^lifespan}}-{{/lifespan}}</span>
+                    </div>
+
+                    <h3>특징</h3>
+                    <p style="line-height: 1.6; white-space: pre-wrap;">{{description}}</p>
+                </div>
+            </div>
+
+            <h2 style="margin-top: 40px; border-bottom: 2px solid #ede8df; padding-bottom: 12px;">관리 방법</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="care-item">
+                    <h4>💧 물주기</h4>
+                    <p style="white-space: pre-wrap;">{{watering}}</p>
+                </div>
+                <div class="care-item">
+                    <h4>☀️ 햇빛</h4>
+                    <p style="white-space: pre-wrap;">{{sunlight}}</p>
+                </div>
+                <div class="care-item">
+                    <h4>🌡️ 온도 & 습도</h4>
+                    <p style="white-space: pre-wrap;">{{temperature}}</p>
+                </div>
+                <div class="care-item">
+                    <h4>🧪 비료</h4>
+                    <p style="white-space: pre-wrap;">{{fertilizer}}</p>
+                </div>
+                <div class="care-item" style="grid-column: span 2;">
+                    <h4>📋 기타 관리 (분갈이, 주의사항 등)</h4>
+                    <p style="white-space: pre-wrap;">{{humidity}}</p>
+                </div>
+            </div>
+        {{/guide}}
     </div>
 
     <div class="actions">
-        <a href="/admin/guides/{{guide.id}}/edit">수정</a>
-        <form method="post" action="/admin/guides/{{guide.id}}/delete">
-            <button type="submit">삭제</button>
+        <a href="/admin/guides/{{guide.id}}/edit" style="background: #167744; color: white; padding: 10px 16px; border-radius: 8px;">수정하기</a>
+        <form method="post" action="/admin/guides/{{guide.id}}/delete" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+            <button type="submit">삭제하기</button>
         </form>
     </div>
 </main>

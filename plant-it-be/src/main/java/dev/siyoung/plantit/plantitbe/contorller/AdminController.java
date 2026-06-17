@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpSession;
 import dev.siyoung.plantit.plantitbe.service.AdminDbService;
 import dev.siyoung.plantit.plantitbe.service.AdminPlantCareGuideService;
 import dev.siyoung.plantit.plantitbe.service.AiPromptService;
+import dev.siyoung.plantit.plantitbe.exception.PlantItException;
+import org.springframework.http.HttpStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -117,6 +119,25 @@ public class AdminController {
 
         aiPromptService.update(promptType, form);
         return "redirect:/admin/prompts";
+    }
+
+    @GetMapping("/db/{table}/{id}/edit")
+    public String editDbRow(@PathVariable String table, @PathVariable Long id, Model model) {
+        Object entity = switch (table) {
+            case "users" -> adminDbService.getUser(id);
+            case "plants" -> adminDbService.getPlant(id);
+            default -> throw new PlantItException(HttpStatus.BAD_REQUEST, "이 테이블은 수정을 지원하지 않습니다.");
+        };
+        model.addAttribute("table", table);
+        model.addAttribute("id", id);
+        model.addAttribute("data", entity);
+        return "admin/db/edit-" + table;
+    }
+
+    @PostMapping("/db/{table}/{id}")
+    public String updateDbRow(@PathVariable String table, @PathVariable Long id, HttpServletRequest request) {
+        adminDbService.update(table, id, request);
+        return "redirect:/admin/db/" + table;
     }
 
     @PostMapping("/db/{table}/{id}/delete")

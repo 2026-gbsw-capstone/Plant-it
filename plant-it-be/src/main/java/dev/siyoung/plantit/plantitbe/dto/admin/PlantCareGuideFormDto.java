@@ -18,9 +18,8 @@ public class PlantCareGuideFormDto {
     @Size(max = 100, message = "식물 종 이름은 100자 이하여야 합니다.")
     private String speciesName;
 
-    @NotBlank(message = "난이도는 필수입니다.")
-    @Size(max = 20, message = "난이도는 20자 이하여야 합니다.")
-    private String difficulty;
+    private String size;
+    private String lifespan;
 
     @NotBlank(message = "일조 정보는 필수입니다.")
     private String sunlight;
@@ -39,8 +38,12 @@ public class PlantCareGuideFormDto {
         return valueOrEmpty(speciesName);
     }
 
-    public String getDifficulty() {
-        return valueOrEmpty(difficulty);
+    public String getSize() {
+        return valueOrEmpty(size);
+    }
+
+    public String getLifespan() {
+        return valueOrEmpty(lifespan);
     }
 
     public String getSunlight() {

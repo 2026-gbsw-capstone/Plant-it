@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 public class PlantGuideDetailResponseDto {
     private Long id;
     private String speciesName;
-    private String difficulty;
+    private String size;
+    private String lifespan;
     private String sunlight;
     private String watering;
     private String fertilizer;

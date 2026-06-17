@@ -47,9 +47,11 @@ public class AwsCliStorageService {
                     file.getContentType()
             ).redirectErrorStream(true).start();
 
+            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                throw new PlantItException(HttpStatus.BAD_GATEWAY, "S3 업로드에 실패했습니다.");
+                System.err.println("AWS CLI Error: " + output);
+                throw new PlantItException(HttpStatus.BAD_GATEWAY, "S3 업로드 실패: " + output);
             }
 
             return publicUrl(objectName);

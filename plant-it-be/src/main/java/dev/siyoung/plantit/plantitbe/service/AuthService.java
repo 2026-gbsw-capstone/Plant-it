@@ -52,6 +52,9 @@ public class AuthService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new PlantItException(HttpStatus.CONFLICT, "이미 가입된 이메일입니다.");
         }
+        if (userRepository.existsByNickname(request.getNickname())) {
+            throw new PlantItException(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.");
+        }
 
         User user = User.builder()
                 .email(request.getEmail())
@@ -84,7 +87,7 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> userRepository.save(User.builder()
                         .email(email)
-                        .nickname(firebaseUser.getName() == null ? "google-user" : firebaseUser.getName())
+                        .nickname(createUniqueNickname(firebaseUser.getName()))
                         .profileImageUrl(firebaseUser.getPicture())
                         .loginType(User.LoginType.GOOGLE)
                         .build()));
@@ -183,5 +186,24 @@ public class AuthService {
 
     private String createCode() {
         return String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+    }
+
+    private String createUniqueNickname(String nickname) {
+        String baseNickname = nickname == null || nickname.isBlank() ? "google-user" : nickname.trim();
+        if (baseNickname.length() > 45) {
+            baseNickname = baseNickname.substring(0, 45);
+        }
+        if (!userRepository.existsByNickname(baseNickname)) {
+            return baseNickname;
+        }
+
+        for (int i = 0; i < 20; i++) {
+            String candidate = baseNickname + "-" + SECURE_RANDOM.nextInt(10_000);
+            if (!userRepository.existsByNickname(candidate)) {
+                return candidate;
+            }
+        }
+
+        throw new PlantItException(HttpStatus.CONFLICT, "사용 가능한 닉네임을 생성하지 못했습니다.");
     }
 }

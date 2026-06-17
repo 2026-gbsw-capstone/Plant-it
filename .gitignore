@@ -1,2 +1,24 @@
+# OS
 .DS_Store
 temp/
+
+# Secrets — 절대 커밋 금지
+**/.env
+**/key.properties
+**/*.keystore
+**/*.jks
+
+# 배포 산출물 (R2/스토어에 올림, git에는 넣지 않음)
+**/*.apk
+**/*.aab
+
+# 빌드 출력 / 캐시
+**/build/
+**/.gradle/
+**/.dart_tool/
+**/.cxx/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+
+# 기타
+.codex

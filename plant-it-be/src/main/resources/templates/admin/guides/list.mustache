@@ -34,6 +34,7 @@
         <a href="/admin/db/ai-analyses">AI 분석</a>
         <a href="/admin/db/notification-settings">알림 설정</a>
         <a href="/admin/db/notification-histories">알림 기록</a>
+        <a href="/admin/swagger-ui.html" target="_blank">Swagger API</a>
     </nav>
 
     <div class="toolbar">
@@ -47,7 +48,6 @@
             <tr>
                 <th>ID</th>
                 <th>종 이름</th>
-                <th>난이도</th>
                 <th>일조</th>
                 <th>관리</th>
             </tr>
@@ -57,7 +57,6 @@
                 <tr>
                     <td>{{id}}</td>
                     <td><a href="/admin/guides/{{id}}">{{speciesName}}</a></td>
-                    <td>{{difficulty}}</td>
                     <td>{{sunlight}}</td>
                     <td><a href="/admin/guides/{{id}}/edit">수정</a></td>
                 </tr>

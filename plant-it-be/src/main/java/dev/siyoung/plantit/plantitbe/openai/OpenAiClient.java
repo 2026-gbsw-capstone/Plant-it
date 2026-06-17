@@ -1,6 +1,7 @@
 package dev.siyoung.plantit.plantitbe.openai;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.siyoung.plantit.plantitbe.exception.PlantItException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -22,9 +23,10 @@ public class OpenAiClient {
     private final String model;
     private final int maxRetries;
     private final RestClient restClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public OpenAiClient(@Value("${openai.api-key:}") String apiKey,
-                        @Value("${openai.model:gpt-5-mini}") String model,
+                        @Value("${openai.model:gpt-4o-mini}") String model,
                         @Value("${openai.max-retries:2}") int maxRetries) {
         this.apiKey = apiKey;
         this.model = model;
@@ -78,15 +80,15 @@ public class OpenAiClient {
         int attempts = Math.max(1, maxRetries + 1);
         for (int attempt = 1; attempt <= attempts; attempt++) {
             try {
-                JsonNode response = restClient.post()
+                String responseBody = restClient.post()
                         .uri("/v1/responses")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(body)
                         .retrieve()
-                        .body(JsonNode.class);
+                        .body(String.class);
 
-                return extractOutputText(response);
+                return extractOutputText(parseResponse(responseBody));
             } catch (RestClientResponseException e) {
                 if (!shouldRetry(e.getStatusCode().value()) || attempt == attempts) {
                     throw new PlantItException(HttpStatus.BAD_GATEWAY, "OpenAI API 호출에 실패했습니다.");
@@ -101,6 +103,14 @@ public class OpenAiClient {
         }
 
         throw new PlantItException(HttpStatus.BAD_GATEWAY, "OpenAI API 호출에 실패했습니다.");
+    }
+
+    private JsonNode parseResponse(String responseBody) {
+        try {
+            return objectMapper.readTree(responseBody);
+        } catch (Exception e) {
+            throw new PlantItException(HttpStatus.BAD_GATEWAY, "OpenAI 응답 파싱에 실패했습니다.");
+        }
     }
 
     private boolean shouldRetry(int statusCode) {

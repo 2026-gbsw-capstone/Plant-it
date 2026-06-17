@@ -12,6 +12,5 @@ import lombok.NoArgsConstructor;
 public class PlantGuideListResponseDto {
     private Long id;
     private String speciesName;
-    private String difficulty;
     private String imageUrl;
 }

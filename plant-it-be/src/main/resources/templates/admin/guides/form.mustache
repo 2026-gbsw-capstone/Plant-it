@@ -35,34 +35,49 @@
     <form method="post" action="{{action}}">
         {{#form}}
             <label>종 이름
-                <input name="speciesName" value="{{speciesName}}" maxlength="100" required>
+                <input name="speciesName" value="{{speciesName}}" maxlength="100" placeholder="예: 마밀라리아 (Mammillaria gracilis)" required>
             </label>
-            <label>난이도
-                <input name="difficulty" value="{{difficulty}}" maxlength="20" placeholder="EASY / MEDIUM / HARD" required>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <label>크기
+                    <input name="size" value="{{size}}" placeholder="예: 5 ~ 20cm">
+                </label>
+                <label>수명
+                    <input name="lifespan" value="{{lifespan}}" placeholder="예: 10 ~ 30년">
+                </label>
+            </div>
+            <label>이미지
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                    <img id="imagePreview" src="{{#imageUrl}}{{imageUrl}}{{/imageUrl}}{{^imageUrl}}https://via.placeholder.com/150?text=No+Image{{/imageUrl}}"
+                         style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #d8d1c7;">
+                    <div style="display: grid; gap: 8px; flex: 1;">
+                        <div style="display: flex; gap: 8px;">
+                            <input type="file" id="imageFile" accept="image/*" style="width: auto;">
+                            <button type="button" id="uploadBtn" style="background: #444; font-size: 13px; padding: 6px 10px; width: fit-content;">이미지 업로드</button>
+                        </div>
+                        <input type="text" name="imageUrl" id="imageUrl" value="{{imageUrl}}" placeholder="이미지 URL (업로드 시 자동 채워짐)">
+                        <small id="uploadStatus" style="color: #666;"></small>
+                    </div>
+                </div>
             </label>
-            <label>이미지 URL
-                <input name="imageUrl" value="{{imageUrl}}">
+            <label>특징 (흥미로운 점 중심)
+                <textarea name="description" placeholder="식물의 유래, 외형적 특징, 장단점 등을 이야기하듯 적어주세요.">{{description}}</textarea>
             </label>
-            <label>일조 정보
-                <textarea name="sunlight" required>{{sunlight}}</textarea>
+
+            <h3 style="margin-top: 24px; border-bottom: 2px solid #ede8df; padding-bottom: 8px;">관리 방법 (읽고 따라하기 쉽게)</h3>
+            <label>물주기
+                <textarea name="watering" placeholder="계절별 물주기 횟수와 양을 상세히 적어주세요." required>{{watering}}</textarea>
             </label>
-            <label>물주기 정보
-                <textarea name="watering" required>{{watering}}</textarea>
+            <label>햇빛
+                <textarea name="sunlight" placeholder="필요한 일조량과 추천 위치를 적어주세요." required>{{sunlight}}</textarea>
             </label>
-            <label>비료 정보
-                <textarea name="fertilizer">{{fertilizer}}</textarea>
+            <label>온도 & 습도
+                <textarea name="temperature" placeholder="적정 온도와 습도, 겨울철 주의사항 등을 적어주세요.">{{temperature}}</textarea>
             </label>
-            <label>습도 정보
-                <textarea name="humidity">{{humidity}}</textarea>
+            <label>비료
+                <textarea name="fertilizer" placeholder="비료 종류와 주기, 양을 적어주세요.">{{fertilizer}}</textarea>
             </label>
-            <label>온도 정보
-                <textarea name="temperature">{{temperature}}</textarea>
-            </label>
-            <label>독성 정보
-                <textarea name="toxicity">{{toxicity}}</textarea>
-            </label>
-            <label>설명
-                <textarea name="description">{{description}}</textarea>
+            <label>기타 (분갈이, 주의사항 등)
+                <textarea name="humidity" placeholder="분갈이 주기나 독성 정보, 과습 시 대처법 등을 적어주세요.">{{humidity}}</textarea>
             </label>
         {{/form}}
         <div class="actions">
@@ -70,6 +85,43 @@
             <a class="secondary" href="/admin/guides">취소</a>
         </div>
     </form>
+    <script>
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('imageFile');
+            const status = document.getElementById('uploadStatus');
+            const preview = document.getElementById('imagePreview');
+            const urlInput = document.getElementById('imageUrl');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('파일을 선택해주세요.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', 'guide');
+
+            status.textContent = '업로드 중...';
+            try {
+                const response = await fetch('/api/v1/uploads/images', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    const newUrl = result.data.imageUrl;
+                    urlInput.value = newUrl;
+                    preview.src = newUrl;
+                    status.textContent = '업로드 완료!';
+                } else {
+                    status.textContent = '업로드 실패: ' + result.message;
+                }
+            } catch (error) {
+                status.textContent = '업로드 오류 발생';
+                console.error(error);
+            }
+        });
+    </script>
 </main>
 </body>
 </html>

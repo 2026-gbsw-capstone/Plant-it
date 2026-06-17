@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "9146247512",
+    "project_id": "capstone-b19e0",
+    "storage_bucket": "capstone-b19e0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:9146247512:android:f69248183f0cbf5d059d2d",
+        "android_client_info": {
+          "package_name": "dev.siyoung.growve"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "9146247512-cfvoojhqobcgcdiuk525eke6efks4bnj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2QIInvz6sq5kiHo1o_i2a1_fmeF2H6IM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "9146247512-cfvoojhqobcgcdiuk525eke6efks4bnj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "9146247512-99pp7kbau0oem7oncsj90m6uqcivln7s.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "dev.siyoung.plantit.fdas"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

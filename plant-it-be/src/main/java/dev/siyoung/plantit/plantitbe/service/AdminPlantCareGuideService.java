@@ -46,7 +46,8 @@ public class AdminPlantCareGuideService {
     public PlantCareGuideFormDto toForm(PlantCareGuide guide) {
         return PlantCareGuideFormDto.builder()
                 .speciesName(guide.getSpeciesName())
-                .difficulty(guide.getDifficulty())
+                .size(guide.getSize())
+                .lifespan(guide.getLifespan())
                 .sunlight(guide.getSunlight())
                 .watering(guide.getWatering())
                 .fertilizer(guide.getFertilizer())
@@ -60,7 +61,8 @@ public class AdminPlantCareGuideService {
 
     private void applyForm(PlantCareGuide guide, PlantCareGuideFormDto form) {
         guide.setSpeciesName(form.getSpeciesName());
-        guide.setDifficulty(form.getDifficulty());
+        guide.setSize(form.getSize());
+        guide.setLifespan(form.getLifespan());
         guide.setSunlight(form.getSunlight());
         guide.setWatering(form.getWatering());
         guide.setFertilizer(form.getFertilizer());

@@ -79,14 +79,16 @@ public class AiService {
     public ChatResponseDto chat(Long userId, ChatRequestDto request) {
         Plant plant = findPlant(userId, request.getPlantId());
         try {
-            String answer = openAiClient.createTextResponse(buildChatPrompt(plant, request), false);
-            saveAnalysis(plant, null, PlantAiAnalysis.AnalysisType.CHAT, answer, PlantAiAnalysis.ResultStatus.SUCCESS);
+            String answer = hasText(request.getImageUrl())
+                    ? openAiClient.createImageResponse(buildChatPrompt(plant, request), request.getImageUrl(), false)
+                    : openAiClient.createTextResponse(buildChatPrompt(plant, request), false);
+            saveAnalysis(plant, request.getImageUrl(), PlantAiAnalysis.AnalysisType.CHAT, answer, PlantAiAnalysis.ResultStatus.SUCCESS);
 
             return ChatResponseDto.builder()
                     .answer(answer)
                     .build();
         } catch (PlantItException e) {
-            saveAnalysis(plant, null, PlantAiAnalysis.AnalysisType.CHAT, e.getMessage(), PlantAiAnalysis.ResultStatus.FAILED);
+            saveAnalysis(plant, request.getImageUrl(), PlantAiAnalysis.AnalysisType.CHAT, e.getMessage(), PlantAiAnalysis.ResultStatus.FAILED);
             throw e;
         }
     }
@@ -138,6 +140,7 @@ public class AiService {
                 + "\nSpecies name: " + nullToBlank(plant.getSpeciesName())
                 + "\nHealth status: " + plant.getHealthStatus()
                 + "\nMemo: " + nullToBlank(plant.getMemo())
+                + (hasText(request.getImageUrl()) ? "\nImage URL: " + request.getImageUrl() : "")
                 + "\nQuestion: " + request.getQuestion();
     }
 
@@ -190,5 +193,9 @@ public class AiService {
 
     private String nullToBlank(String value) {
         return value == null ? "" : value;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

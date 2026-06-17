@@ -28,12 +28,21 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/guide/**",
+                                "/api/v1/uploads/**",
                                 "/admin",
                                 "/admin/**",
                                 "/error",
-                                "/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/api-docs/**",
+                                "/favicon.ico",
+                                "/uploads/**",
+                                "/images/**",
+                                "/**/*.png",
+                                "/**/*.jpg",
+                                "/**/*.jpeg",
+                                "/**/*.gif",
+                                "/**/*.webp"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

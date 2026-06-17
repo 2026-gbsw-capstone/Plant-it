@@ -16,6 +16,7 @@ import dev.siyoung.plantit.plantitbe.repository.PlantAiAnalysisRepository;
 import dev.siyoung.plantit.plantitbe.repository.PlantDiaryRepository;
 import dev.siyoung.plantit.plantitbe.repository.PlantRepository;
 import dev.siyoung.plantit.plantitbe.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -62,6 +63,47 @@ public class AdminDbService {
             }
         } catch (DataIntegrityViolationException e) {
             throw new PlantItException(HttpStatus.CONFLICT, "연결된 데이터가 있어 삭제할 수 없습니다.");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public User getUser(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new PlantItException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+    }
+
+    @Transactional(readOnly = true)
+    public Plant getPlant(Long id) {
+        return plantRepository.findById(id).orElseThrow(() -> new PlantItException(HttpStatus.NOT_FOUND, "식물을 찾을 수 없습니다."));
+    }
+
+    public void update(String table, Long id, HttpServletRequest request) {
+        switch (table) {
+            case "users" -> {
+                User user = userRepository.findById(id).orElseThrow(() -> new PlantItException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+                String nickname = request.getParameter("nickname");
+                if (nickname == null || nickname.trim().isEmpty()) {
+                    throw new PlantItException(HttpStatus.BAD_REQUEST, "닉네임은 필수입니다.");
+                }
+                if (userRepository.existsByNicknameAndIdNot(nickname, id)) {
+                    throw new PlantItException(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.");
+                }
+                user.setNickname(nickname);
+                user.setProfileImageUrl(request.getParameter("profileImageUrl"));
+            }
+            case "plants" -> {
+                Plant plant = plantRepository.findById(id).orElseThrow(() -> new PlantItException(HttpStatus.NOT_FOUND, "식물을 찾을 수 없습니다."));
+                plant.setName(request.getParameter("name"));
+                plant.setSpeciesName(request.getParameter("speciesName"));
+                plant.setHealthStatus(Plant.HealthStatus.valueOf(request.getParameter("healthStatus")));
+                plant.setMemo(request.getParameter("memo"));
+                if (request.getParameter("wateringCycleDays") != null && !request.getParameter("wateringCycleDays").isBlank()) {
+                    plant.setWateringCycleDays(Integer.parseInt(request.getParameter("wateringCycleDays")));
+                }
+                if (request.getParameter("fertilizerCycleDays") != null && !request.getParameter("fertilizerCycleDays").isBlank()) {
+                    plant.setFertilizerCycleDays(Integer.parseInt(request.getParameter("fertilizerCycleDays")));
+                }
+            }
+            default -> throw new PlantItException(HttpStatus.BAD_REQUEST, "이 테이블은 수정을 지원하지 않습니다.");
         }
     }
 
@@ -149,6 +191,7 @@ public class AdminDbService {
     private AdminTableRowDto row(String table, Long id, Object... values) {
         return AdminTableRowDto.builder()
                 .id(id)
+                .editUrl("/admin/db/" + table + "/" + id + "/edit")
                 .deleteUrl("/admin/db/" + table + "/" + id + "/delete")
                 .cells(Arrays.stream(values)
                         .map(value -> AdminTableCellDto.builder().value(value(value)).build())

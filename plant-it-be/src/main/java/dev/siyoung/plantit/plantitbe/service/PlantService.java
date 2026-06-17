@@ -57,7 +57,7 @@ public class PlantService {
 
         if (request.getName() != null) plant.setName(request.getName());
         if (request.getSpeciesName() != null) plant.setSpeciesName(request.getSpeciesName());
-        if (request.getPlantImageUrl() != null) plant.setPlantImageUrl(request.getPlantImageUrl());
+        if (request.getPlantImageUrl() != null) plant.setPlantImageUrl(request.getPlantImageUrl().isBlank() ? null : request.getPlantImageUrl());
         if (request.getWateringCycleDays() != null) plant.setWateringCycleDays(request.getWateringCycleDays());
         if (request.getFertilizerCycleDays() != null) plant.setFertilizerCycleDays(request.getFertilizerCycleDays());
         if (request.getMemo() != null) plant.setMemo(request.getMemo());

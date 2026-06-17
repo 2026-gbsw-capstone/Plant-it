@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface PlantDiaryRepository extends JpaRepository<PlantDiary, Long> {
     List<PlantDiary> findByPlantId(Long plantId);
     Optional<PlantDiary> findByIdAndPlantId(Long id, Long plantId);
-    List<PlantDiary> findByPlantIdAndPlantUserId(Long plantId, Long userId);
+    List<PlantDiary> findByPlantIdAndPlantUserIdOrderByRecordedAtAsc(Long plantId, Long userId);
     Optional<PlantDiary> findByIdAndPlantIdAndPlantUserId(Long id, Long plantId, Long userId);
     long countByPlantUserId(Long userId);
 }
