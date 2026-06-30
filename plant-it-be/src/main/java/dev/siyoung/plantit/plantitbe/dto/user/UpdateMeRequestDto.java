@@ -1,6 +1,7 @@
 package dev.siyoung.plantit.plantitbe.dto.user;
 
-import jakarta.validation.constraints.Size;
+import dev.siyoung.plantit.plantitbe.dto.common.ValidationPatterns;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateMeRequestDto {
-    @Size(max = 50, message = "닉네임은 50자 이하여야 합니다.")
+    @Pattern(regexp = ValidationPatterns.NICKNAME, message = ValidationPatterns.NICKNAME_MESSAGE)
     private String nickname;
 
     private String profileImageUrl;

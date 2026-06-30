@@ -1,5 +1,6 @@
 package dev.siyoung.plantit.plantitbe.dto.diary;
 
+import dev.siyoung.plantit.plantitbe.entity.DiaryType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,4 +18,5 @@ public class DiaryListResponseDto {
     private String note;
     private LocalDateTime recordedAt;
     private String aiHealthSummary;
+    private DiaryType diaryType;
 }

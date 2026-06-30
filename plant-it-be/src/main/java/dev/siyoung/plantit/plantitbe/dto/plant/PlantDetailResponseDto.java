@@ -25,4 +25,5 @@ public class PlantDetailResponseDto {
     private LocalDate nextWateringDate;
     private HealthStatus healthStatus;
     private String memo;
+    private LocalDateTime registeredAt;
 }

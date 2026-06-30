@@ -26,6 +26,7 @@ class GrowveTheme {
         primary: GrowveColors.green,
         surface: GrowveColors.paper,
       ),
+      fontFamily: 'GmarketSansTTF'
     );
 
     return base.copyWith(

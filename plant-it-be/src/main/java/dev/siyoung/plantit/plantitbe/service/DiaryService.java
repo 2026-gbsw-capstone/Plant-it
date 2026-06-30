@@ -1,5 +1,7 @@
 package dev.siyoung.plantit.plantitbe.service;
 
+import dev.siyoung.plantit.plantitbe.dto.ai.HealthCheckRequestDto;
+import dev.siyoung.plantit.plantitbe.dto.ai.HealthCheckResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.diary.CreateDiaryRequestDto;
 import dev.siyoung.plantit.plantitbe.dto.diary.CreateDiaryResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.diary.DiaryDetailResponseDto;
@@ -12,6 +14,7 @@ import dev.siyoung.plantit.plantitbe.repository.PlantDiaryRepository;
 import dev.siyoung.plantit.plantitbe.repository.PlantRepository;
 import dev.siyoung.plantit.plantitbe.utils.EntityDtoMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,12 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class DiaryService {
     private final PlantRepository plantRepository;
     private final PlantDiaryRepository plantDiaryRepository;
+    private final AiService aiService;
 
     public CreateDiaryResponseDto createDiary(Long userId, Long plantId, CreateDiaryRequestDto request) {
         Plant plant = plantRepository.findByIdAndUserId(plantId, userId)
@@ -33,7 +38,23 @@ public class DiaryService {
         if (diary.getRecordedAt() == null) {
             diary.setRecordedAt(LocalDateTime.now());
         }
+
+        // 성장 기록이면 사진을 AI로 건강 분석한다. 분석이 실패해도 기록 자체는 저장한다.
+        if (request.isAnalyzeHealth() && hasText(request.getImageUrl())) {
+            try {
+                HealthCheckResponseDto health = aiService.healthCheckInNewTransaction(
+                        userId, new HealthCheckRequestDto(plantId, request.getImageUrl()));
+                diary.setAiHealthSummary(health.getSummary());
+            } catch (Exception e) {
+                log.warn("성장 기록 건강 분석 실패 (plantId={}): {}", plantId, e.getMessage());
+            }
+        }
+
         return EntityDtoMapper.toCreateDto(plantDiaryRepository.save(diary));
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     @Transactional(readOnly = true)

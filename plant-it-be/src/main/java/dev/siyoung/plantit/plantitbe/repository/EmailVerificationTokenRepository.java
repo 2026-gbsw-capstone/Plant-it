@@ -1,6 +1,6 @@
 package dev.siyoung.plantit.plantitbe.repository;
 
-import dev.siyoung.plantit.plantitbe.entity.PasswordResetToken;
+import dev.siyoung.plantit.plantitbe.entity.EmailVerificationToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -8,15 +8,15 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
-    Optional<PasswordResetToken> findTopByUserEmailAndCodeAndUsedFalseOrderByCreatedAtDesc(String email, String code);
-    Optional<PasswordResetToken> findByResetTokenAndVerifiedTrueAndUsedFalse(String resetToken);
+public interface EmailVerificationTokenRepository extends JpaRepository<EmailVerificationToken, Long> {
+    Optional<EmailVerificationToken> findTopByEmailAndCodeAndUsedFalseOrderByCreatedAtDesc(String email, String code);
+
+    Optional<EmailVerificationToken> findTopByEmailAndVerifiedTrueAndUsedFalseOrderByCreatedAtDesc(String email);
 
     /**
      * 새 인증 코드를 발급하기 전에, 해당 이메일로 아직 사용되지 않은 기존 코드를 모두 무효화한다.
-     * 이전에 받은 인증 코드가 계속 사용 가능한 문제를 막는다.
      */
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE PasswordResetToken t SET t.used = true WHERE t.user.email = :email AND t.used = false")
+    @Query("UPDATE EmailVerificationToken t SET t.used = true WHERE t.email = :email AND t.used = false")
     void invalidateActiveTokensByEmail(@Param("email") String email);
 }

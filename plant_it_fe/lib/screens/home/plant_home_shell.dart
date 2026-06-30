@@ -8,7 +8,7 @@ class PlantHomeShell extends StatefulWidget {
 }
 
 class _PlantHomeShellState extends State<PlantHomeShell> {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _tab = 0;
   late Future<_HomeData> _homeData;
 
@@ -16,6 +16,13 @@ class _PlantHomeShellState extends State<PlantHomeShell> {
   void initState() {
     super.initState();
     _homeData = _load();
+    PlantStore.instance.addListener(_refresh);
+  }
+
+  @override
+  void dispose() {
+    PlantStore.instance.removeListener(_refresh);
+    super.dispose();
   }
 
   Future<_HomeData> _load() async {
@@ -72,7 +79,7 @@ class _PlantHomeShellState extends State<PlantHomeShell> {
         return Scaffold(
           key: _scaffoldKey,
           extendBody: true,
-          drawer: _HomeDrawer(user: data.user, onSelectTab: _selectTab),
+          drawer: AppMenuDrawer(onReturn: _refresh),
           body: SafeArea(bottom: false, child: screens[_tab]),
           bottomNavigationBar: _PlantBottomNav(
             selectedIndex: _tab,
@@ -83,11 +90,8 @@ class _PlantHomeShellState extends State<PlantHomeShell> {
     );
   }
 
-  void _openMenu() => _scaffoldKey.currentState?.openDrawer();
-
-  void _selectTab(int tab) {
-    Navigator.pop(context);
-    setState(() => _tab = tab);
+  void _openMenu() {
+    _scaffoldKey.currentState?.openDrawer();
   }
 
   Future<void> _openPlant(PlantModel plant) async {
@@ -95,15 +99,23 @@ class _PlantHomeShellState extends State<PlantHomeShell> {
     _refresh();
   }
 
-  void _showAddPlantSheet() {
-    showModalBottomSheet<bool>(
+  Future<void> _showAddPlantSheet() async {
+    // 피커 시트 결과: 경로 = 사진 선택, '' = 사진 없이 등록, null = 취소
+    final result = await showModalBottomSheet<String?>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const AddPlantPhotoPickerSheet(),
-    ).then((created) {
-      if (created == true) _refresh();
-    });
+    );
+    if (result == null || !mounted) return;
+    final imagePath = result.isEmpty ? null : result;
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AddPlantSheet(initialImagePath: imagePath),
+      ),
+    );
+    // 등록 성공 시 PlantStore.notify()가 자동 새로고침하지만, 안전하게 한 번 더.
+    if (mounted) _refresh();
   }
 }
 

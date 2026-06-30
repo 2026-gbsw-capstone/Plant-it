@@ -3,17 +3,14 @@ package dev.siyoung.plantit.plantitbe.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 @Slf4j
 @ControllerAdvice
@@ -50,8 +47,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
         String message = exception.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.joining(", "));
+                .map(FieldError::getDefaultMessage)
+                .filter(it -> it != null && !it.isBlank())
+                .findFirst()
+                .orElse("입력값이 올바르지 않습니다.");
 
         return ResponseEntity.status(httpStatus)
                 .body(ErrorResponse.of(httpStatus.value(), message));
@@ -75,8 +74,14 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<String> handleAdminException(String message) {
-        return ResponseEntity.status(HttpStatus.OK)
+        String escaped = message
+                .replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("\"", "\\\"")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .header("Content-Type", "text/html;charset=UTF-8")
-                .body("<script>alert('" + message + "'); history.back();</script>");
+                .body("<script>alert('" + escaped + "'); history.back();</script>");
     }
 }

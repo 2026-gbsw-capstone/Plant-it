@@ -179,13 +179,16 @@ class _DiarySheetState extends State<DiarySheet> {
         widget.plantId,
         imageUrl: imageUrl,
         note: _note.text,
+        analyzeHealth: !widget.momentOnly,
+        diaryType: widget.momentOnly ? 'MOMENT' : 'GROWTH',
       );
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        PlantStore.instance.notify();
+        Navigator.pop(context, true);
+      }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
+        showSB(context, error.toString());
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -205,23 +208,21 @@ class _DiarySheetState extends State<DiarySheet> {
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 18),
-          if (!widget.momentOnly) ...[
-            _ImagePickerPanel(
-              imagePath: _imageUrl.text,
-              emptyLabel: '오늘의 성장 사진',
-              height: 220,
-              onCamera: () => _pickImage(ImageSource.camera),
-              onGallery: () => _pickImage(ImageSource.gallery),
-              onFile: _pickImageFile,
-              onClear: _imageUrl.text.trim().isEmpty
-                  ? null
-                  : () => setState(() => _imageUrl.clear()),
-            ),
-            const SizedBox(height: 16),
-          ],
-          const Text(
-            '한마디',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          _ImagePickerPanel(
+            imagePath: _imageUrl.text,
+            emptyLabel: widget.momentOnly ? '순간 사진' : '오늘의 성장 사진',
+            height: 220,
+            onCamera: () => _pickImage(ImageSource.camera),
+            onGallery: () => _pickImage(ImageSource.gallery),
+            onFile: _pickImageFile,
+            onClear: _imageUrl.text.trim().isEmpty
+                ? null
+                : () => setState(() => _imageUrl.clear()),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            widget.momentOnly ? '메모' : '한마디',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           TextField(
@@ -232,7 +233,9 @@ class _DiarySheetState extends State<DiarySheet> {
           ),
           const SizedBox(height: 16),
           _PrimaryButton(
-            label: _saving ? '업로드 중' : '확인',
+            label: _saving
+                ? (widget.momentOnly ? '업로드 중' : 'AI 분석 중')
+                : '확인',
             expanded: true,
             onTap: _saving ? null : _confirmAndSave,
           ),
@@ -354,13 +357,16 @@ class _DiaryScreenState extends State<DiaryScreen> {
         widget.plantId,
         imageUrl: imageUrl,
         note: _note.text,
+        analyzeHealth: !widget.momentOnly,
+        diaryType: widget.momentOnly ? 'MOMENT' : 'GROWTH',
       );
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        PlantStore.instance.notify();
+        Navigator.pop(context, true);
+      }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+        showSB(context, error.toString());
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -400,23 +406,21 @@ class _DiaryScreenState extends State<DiaryScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                 children: [
-                  if (!widget.momentOnly) ...[
-                    _ImagePickerPanel(
-                      imagePath: _imageUrl.text,
-                      emptyLabel: '오늘의 성장 사진',
-                      height: 280,
-                      onCamera: () => _pickImage(ImageSource.camera),
-                      onGallery: () => _pickImage(ImageSource.gallery),
-                      onFile: _pickImageFile,
-                      onClear: _imageUrl.text.trim().isEmpty
-                          ? null
-                          : () => setState(() => _imageUrl.clear()),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                  const Text(
-                    '한마디',
-                    style: TextStyle(
+                  _ImagePickerPanel(
+                    imagePath: _imageUrl.text,
+                    emptyLabel: widget.momentOnly ? '순간 사진' : '오늘의 성장 사진',
+                    height: 280,
+                    onCamera: () => _pickImage(ImageSource.camera),
+                    onGallery: () => _pickImage(ImageSource.gallery),
+                    onFile: _pickImageFile,
+                    onClear: _imageUrl.text.trim().isEmpty
+                        ? null
+                        : () => setState(() => _imageUrl.clear()),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    widget.momentOnly ? '메모' : '한마디',
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
@@ -430,7 +434,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
                   ),
                   const SizedBox(height: 24),
                   _PrimaryButton(
-                    label: _saving ? '업로드 중' : '확인',
+                    label: _saving
+                        ? (widget.momentOnly ? '업로드 중' : 'AI 분석 중')
+                        : '확인',
                     expanded: true,
                     onTap: _saving ? null : _confirmAndSave,
                   ),

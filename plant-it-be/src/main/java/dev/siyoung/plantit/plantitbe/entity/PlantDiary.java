@@ -24,6 +24,11 @@ public class PlantDiary {
     @JoinColumn(name = "plant_id", nullable = false, foreignKey = @ForeignKey(name = "fk_diary_plant"))
     private Plant plant;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "diary_type", columnDefinition = "VARCHAR(10) DEFAULT 'GROWTH' NOT NULL")
+    @Builder.Default
+    private DiaryType diaryType = DiaryType.GROWTH;
+
     @Column(name = "image_url", length = 2048)
     private String imageUrl;
 

@@ -20,11 +20,15 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _routeSignedInUser() async {
-    final hasSession = await ApiService.instance.hasSession();
-    if (!mounted) return;
-    if (hasSession) {
-      context.go('/home');
-      return;
+    try {
+      final hasSession = await ApiService.instance.hasSession();
+      if (!mounted) return;
+      if (hasSession) {
+        context.go('/home');
+        return;
+      }
+    } catch (_) {
+      if (!mounted) return;
     }
     setState(() => _checkingSession = false);
   }
@@ -77,6 +81,9 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                   const Spacer(),
+                  const Spacer(),
+                  const Spacer(),
+                  const Spacer(),
                   Center(
                     child: SizedBox(
                       width: 126,
@@ -99,6 +106,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                     ),
                   ),
+                  const Spacer(),
                 ],
               ),
             ),

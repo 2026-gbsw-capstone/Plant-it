@@ -37,6 +37,7 @@ public final class EntityDtoMapper {
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 
@@ -53,6 +54,7 @@ public final class EntityDtoMapper {
                 .nextWateringDate(calculateNextWateringDate(plant))
                 .healthStatus(plant.getHealthStatus())
                 .memo(plant.getMemo())
+                .registeredAt(plant.getRegisteredAt())
                 .build();
     }
 
@@ -63,6 +65,7 @@ public final class EntityDtoMapper {
                 .note(diary.getNote())
                 .recordedAt(diary.getRecordedAt())
                 .aiHealthSummary(diary.getAiHealthSummary())
+                .diaryType(diary.getDiaryType())
                 .build();
     }
 
@@ -153,6 +156,7 @@ public final class EntityDtoMapper {
                 .note(diary.getNote())
                 .recordedAt(diary.getRecordedAt())
                 .aiHealthSummary(diary.getAiHealthSummary())
+                .diaryType(diary.getDiaryType())
                 .build();
     }
 
@@ -186,6 +190,7 @@ public final class EntityDtoMapper {
         return PlantDiary.builder()
                 .id(null)
                 .plant(plant)
+                .diaryType(request.resolvedDiaryType())
                 .imageUrl(request.getImageUrl())
                 .note(request.getNote())
                 .recordedAt(request.getRecordedAt())

@@ -97,140 +97,6 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-class _HomeDrawer extends StatelessWidget {
-  const _HomeDrawer({required this.user, required this.onSelectTab});
-
-  final UserModel user;
-  final ValueChanged<int> onSelectTab;
-
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      width: 292,
-      backgroundColor: PlantItColors.cream,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  _Avatar(url: user.profileImageUrl),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.nickname,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          user.email,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: PlantItColors.muted,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-              _DrawerMenuItem(
-                icon: 'assets/icons/home.svg',
-                label: '홈',
-                onTap: () => onSelectTab(0),
-              ),
-              _DrawerMenuItem(
-                icon: 'assets/icons/plant.svg',
-                label: '내 식물',
-                onTap: () => onSelectTab(1),
-              ),
-              _DrawerMenuItem(
-                icon: 'assets/icons/book.svg',
-                label: '도감',
-                onTap: () => onSelectTab(2),
-              ),
-              _DrawerMenuItem(
-                icon: 'assets/icons/user.svg',
-                label: '프로필',
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/profile');
-                },
-              ),
-              _DrawerMenuItem(
-                icon: 'assets/icons/gear.svg',
-                label: '설정',
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/settings');
-                },
-              ),
-              _DrawerMenuItem(
-                icon: 'assets/icons/book.svg',
-                label: '앱 정보',
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/app-info');
-                },
-              ),
-              const Spacer(),
-              _DrawerMenuItem(
-                icon: 'assets/icons/back.svg',
-                label: '닫기',
-                onTap: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DrawerMenuItem extends StatelessWidget {
-  const _DrawerMenuItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final String icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        height: 54,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Row(
-          children: [
-            _NavIcon(icon, color: PlantItColors.ink),
-            const SizedBox(width: 14),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _RoundIconButton extends StatelessWidget {
   const _RoundIconButton({required this.onPressed, required this.icon});
 
@@ -1110,17 +976,21 @@ class _PlantImage extends StatelessWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({this.url});
+// 백엔드(ValidationPatterns)와 동일한 입력 규칙. 이모지·공백·기타 특수문자를 막는다.
+final RegExp kEmailPattern = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+final RegExp kPasswordPattern = RegExp(r'^[A-Za-z0-9!@#$%^&*()_+\-=]+$');
+final RegExp kNicknamePattern = RegExp(r'^[가-힣a-zA-Z0-9_]{2,20}$');
 
-  final String? url;
+const kPasswordRuleMessage = '비밀번호는 영문, 숫자, 일부 특수문자(!@#\$%^&*()_+-=)만 사용할 수 있어요.';
+const kNicknameRuleMessage = '유저네임은 한글, 영문, 숫자, 밑줄(_)만 사용할 수 있고 2~20자여야 해요.';
 
-  @override
-  Widget build(BuildContext context) {
-    return ClipOval(
-      child: SizedBox(width: 58, height: 58, child: _PlantImage(url: url)),
-    );
-  }
+/// 스낵바를 표시하기 전에 기존에 떠 있는 스낵바를 모두 제거한다.
+/// 버튼 연타 시 스낵바가 누적되어 장시간 노출되는 문제를 막는다.
+void showSB(BuildContext context, String message) {
+  if (message.trim().isEmpty) return;
+  ScaffoldMessenger.of(context)
+    ..clearSnackBars()
+    ..showSnackBar(SnackBar(content: Text(message)));
 }
 
 BoxDecoration _cardDecoration({double radius = 24}) {
@@ -1292,9 +1162,7 @@ class _ConfirmThenPasswordDialogState
       if (mounted) widget.onSuccess(context);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+        showSB(context, error.toString());
         setState(() => _loading = false);
       }
     }

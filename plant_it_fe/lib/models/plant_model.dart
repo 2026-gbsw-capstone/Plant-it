@@ -11,6 +11,7 @@ class PlantModel {
     this.lastWateredAt,
     this.lastFertilizedAt,
     this.memo,
+    this.registeredAt,
   });
 
   final int id;
@@ -24,6 +25,7 @@ class PlantModel {
   final DateTime? lastWateredAt;
   final DateTime? lastFertilizedAt;
   final String? memo;
+  final DateTime? registeredAt;
 
   factory PlantModel.fromJson(Map<String, dynamic> json) {
     return PlantModel(
@@ -38,6 +40,7 @@ class PlantModel {
       lastWateredAt: _parseDate(json['lastWateredAt']),
       lastFertilizedAt: _parseDate(json['lastFertilizedAt']),
       memo: json['memo'] as String?,
+      registeredAt: _parseDate(json['registeredAt']),
     );
   }
 

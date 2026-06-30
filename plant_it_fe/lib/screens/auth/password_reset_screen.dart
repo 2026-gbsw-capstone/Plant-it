@@ -67,6 +67,10 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
           _show('비밀번호는 8자 이상이어야 해요.');
           return;
         }
+        if (!kPasswordPattern.hasMatch(_password.text)) {
+          _show(kPasswordRuleMessage);
+          return;
+        }
         if (_password.text != _confirm.text) {
           _show('비밀번호가 일치하지 않아요.');
           return;
@@ -86,8 +90,32 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     }
   }
 
+  Future<void> _resendCode() async {
+    if (_loading) return;
+    final email = _email.text.trim();
+    if (email.isEmpty) {
+      _show('이메일을 먼저 입력해 주세요.');
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      // 새 코드를 발급하면 서버에서 이전 코드는 무효화된다.
+      final devCode = await ApiService.instance.requestPasswordReset(email);
+      if (!mounted) return;
+      setState(() {
+        _devCode = devCode;
+        _code.clear();
+      });
+      _show(devCode == null ? '인증 코드를 다시 보냈어요.' : '개발 인증 코드: $devCode');
+    } catch (error) {
+      if (mounted) _show(error.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   void _show(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    showSB(context, msg);
   }
 
   @override
@@ -193,6 +221,16 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _loading ? null : _resendCode,
+                        style: TextButton.styleFrom(
+                          foregroundColor: PlantItColors.green,
+                        ),
+                        child: const Text('인증 코드 다시 보내기'),
                       ),
                     ),
                   ],

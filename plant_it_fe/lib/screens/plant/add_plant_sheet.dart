@@ -108,8 +108,9 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
         imageUrl: uploadedImageUrl,
       );
       final speciesName = identified.speciesName.trim();
-      if (speciesName.isEmpty || speciesName == '분석 불가') {
-        _showMessage('사진에서 도감 식물을 찾지 못했습니다.');
+      final lower = speciesName.toLowerCase();
+      if (speciesName.isEmpty || lower == '분석 불가' || lower == 'unknown') {
+        _showMessage('식물을 인식하지 못했어요. 다른 사진으로 다시 시도해 주세요.');
         return;
       }
 
@@ -177,7 +178,10 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
           memo: _memo.text,
         );
       }
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        PlantStore.instance.notify();
+        Navigator.pop(context, true);
+      }
     } catch (error) {
       _showMessage(error.toString());
     } finally {
@@ -187,123 +191,171 @@ class _AddPlantSheetState extends State<AddPlantSheet> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    showSB(context, message);
   }
 
   @override
   Widget build(BuildContext context) {
-    return _SheetFrame(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            widget.plant == null ? '식물 추가' : '식물 정보 수정',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 18),
-          _ImagePickerPanel(
-            imagePath: _imageUrl.text,
-            emptyLabel: '식물 사진을 추가해 주세요',
-            onCamera: () => _pickImage(ImageSource.camera),
-            onGallery: () => _pickImage(ImageSource.gallery),
-            onFile: _pickImageFile,
-            onClear: _imageUrl.text.trim().isEmpty
-                ? null
-                : () => setState(() => _imageUrl.clear()),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _name,
-            decoration: const InputDecoration(
-              labelText: '식물 이름',
-              hintText: '식물 이름',
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 16, 16, 0),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+                  Expanded(
+                    child: Text(
+                      widget.plant == null ? '식물 추가' : '식물 정보 수정',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 48),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          _GuideSelectPanel(
-            guide: _selectedGuide,
-            onSelect: _openGuidePicker,
-            onIdentify: _identifying ? null : _identifyFromImage,
-            identifying: _identifying,
-          ),
-          const SizedBox(height: 10),
-          if (_selectedGuide != null) ...[
-            _GuideCareSummary(guide: _selectedGuide!),
-            const SizedBox(height: 10),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                children: [
+                  _ImagePickerPanel(
+                    imagePath: _imageUrl.text,
+                    emptyLabel: '식물 사진을 추가해 주세요',
+                    height: 240,
+                    onCamera: () => _pickImage(ImageSource.camera),
+                    onGallery: () => _pickImage(ImageSource.gallery),
+                    onFile: _pickImageFile,
+                    onClear: _imageUrl.text.trim().isEmpty
+                        ? null
+                        : () => setState(() => _imageUrl.clear()),
+                  ),
+                  const SizedBox(height: 18),
+                  // 식물종(도감) 선택 — 인라인 필드 + 교체 아이콘
+                  _SpeciesPickerField(
+                    speciesName: _selectedGuide?.speciesName,
+                    onTap: _openGuidePicker,
+                    onIdentify: _identifying ? null : _identifyFromImage,
+                    identifying: _identifying,
+                  ),
+                  if (_selectedGuide != null) ...[
+                    const SizedBox(height: 12),
+                    _GuideCareSummary(guide: _selectedGuide!),
+                  ],
+                  const SizedBox(height: 20),
+                  const Text(
+                    '이름',
+                    style: TextStyle(fontSize: 12, color: PlantItColors.muted),
+                  ),
+                  TextField(
+                    controller: _name,
+                    decoration: const InputDecoration(hintText: '...'),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    '메모',
+                    style: TextStyle(fontSize: 12, color: PlantItColors.muted),
+                  ),
+                  TextField(
+                    controller: _memo,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(hintText: '...'),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: _PrimaryButton(
+                label: _saving ? '업로드 중' : '확인',
+                expanded: true,
+                onTap: _saving || _identifying ? null : _save,
+              ),
+            ),
           ],
-          TextField(
-            controller: _memo,
-            minLines: 2,
-            maxLines: 4,
-            decoration: const InputDecoration(labelText: '메모', hintText: '메모'),
-          ),
-          const SizedBox(height: 16),
-          _PrimaryButton(
-            label: _saving ? '업로드 중' : '저장하기',
-            expanded: true,
-            onTap: _saving || _identifying ? null : _save,
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _GuideSelectPanel extends StatelessWidget {
-  const _GuideSelectPanel({
-    required this.guide,
-    required this.onSelect,
+// 식물종 선택 인라인 필드: [식물종 이름] ⇄  + 사진으로 찾기(AI)
+class _SpeciesPickerField extends StatelessWidget {
+  const _SpeciesPickerField({
+    required this.speciesName,
+    required this.onTap,
     required this.onIdentify,
     required this.identifying,
   });
 
-  final PlantCareGuideModel? guide;
-  final VoidCallback onSelect;
+  final String? speciesName;
+  final VoidCallback onTap;
   final VoidCallback? onIdentify;
   final bool identifying;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F3EA),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE4D9C9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  guide == null ? '도감 식물을 선택해 주세요' : guide!.speciesName,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+    final hasSpecies = (speciesName ?? '').trim().isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    hasSpecies ? speciesName!.trim() : '식물종 선택',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: hasSpecies
+                          ? PlantItColors.text
+                          : PlantItColors.muted,
+                    ),
                   ),
                 ),
-              ),
-              TextButton(onPressed: onSelect, child: const Text('도감 선택')),
-            ],
+                const Icon(
+                  Icons.swap_horiz,
+                  size: 20,
+                  color: PlantItColors.muted,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
+        ),
+        const Divider(height: 1, color: PlantItColors.line),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
             onPressed: onIdentify,
+            style: TextButton.styleFrom(
+              foregroundColor: PlantItColors.green,
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             icon: identifying
                 ? const SizedBox(
-                    width: 16,
-                    height: 16,
+                    width: 14,
+                    height: 14,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.auto_awesome, size: 18),
+                : const Icon(Icons.camera_alt_outlined, size: 16),
             label: Text(identifying ? '사진 분석 중' : '사진으로 도감 찾기'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -369,178 +421,6 @@ class _GuideCareRow extends StatelessWidget {
   }
 }
 
-class _GuidePickerSheet extends StatefulWidget {
-  const _GuidePickerSheet({this.initialKeyword});
-
-  final String? initialKeyword;
-
-  @override
-  State<_GuidePickerSheet> createState() => _GuidePickerSheetState();
-}
-
-class _GuidePickerSheetState extends State<_GuidePickerSheet> {
-  late final TextEditingController _keyword = TextEditingController(
-    text: widget.initialKeyword ?? '',
-  );
-  late Future<List<PlantCareGuideModel>> _guides = _loadGuides();
-  int? _loadingGuideId;
-
-  @override
-  void dispose() {
-    _keyword.dispose();
-    super.dispose();
-  }
-
-  Future<List<PlantCareGuideModel>> _loadGuides() {
-    return ApiService.instance.getGuides(keyword: _keyword.text);
-  }
-
-  void _search() {
-    setState(() => _guides = _loadGuides());
-  }
-
-  Future<void> _selectGuide(PlantCareGuideModel guide) async {
-    setState(() => _loadingGuideId = guide.id);
-    try {
-      final detail = await ApiService.instance.getGuide(guide.id);
-      if (mounted) Navigator.pop(context, detail);
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
-      setState(() => _loadingGuideId = null);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _SheetFrame(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            '도감에서 선택',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _keyword,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _search(),
-            decoration: InputDecoration(
-              hintText: '식물 이름 검색',
-              suffixIcon: IconButton(
-                onPressed: _search,
-                icon: const Icon(Icons.search),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 360),
-            child: FutureBuilder<List<PlantCareGuideModel>>(
-              future: _guides,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(28),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
-                final guides = snapshot.data ?? const [];
-                if (guides.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(28),
-                    child: Text('검색 결과가 없습니다.', textAlign: TextAlign.center),
-                  );
-                }
-                return ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: guides.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final guide = guides[index];
-                    return _GuideOptionTile(
-                      guide: guide,
-                      loading: _loadingGuideId == guide.id,
-                      onTap: () => _selectGuide(guide),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GuideOptionTile extends StatelessWidget {
-  const _GuideOptionTile({
-    required this.guide,
-    required this.loading,
-    required this.onTap,
-  });
-
-  final PlantCareGuideModel guide;
-  final bool loading;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: loading ? null : onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE9E1D6)),
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: _PlantImage(
-                  url: guide.imageUrl,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                guide.speciesName,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            if (loading)
-              const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              const Icon(Icons.chevron_right, color: Color(0xFF6F806D)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 int? _cycleDaysFromGuide(String? text) {
   final value = text?.trim();
   if (value == null || value.isEmpty) return null;
@@ -600,9 +480,7 @@ class _GuidePickerScreenState extends State<_GuidePickerScreen> {
       if (mounted) Navigator.pop(context, detail);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+        showSB(context, error.toString());
         setState(() => _loadingId = null);
       }
     }
@@ -764,12 +642,11 @@ class AddPlantPhotoPickerSheet extends StatelessWidget {
             label: '사진 촬영',
             color: PlantItColors.green,
             onTap: () async {
-              Navigator.pop(context);
+              final navigator = Navigator.of(context);
               final path = await ImageUploadService.instance
                   .pickPlantImage(ImageSource.camera);
-              if (path != null && context.mounted) {
-                _openAddSheet(context, imagePath: path);
-              }
+              // 촬영을 취소하면 선택 시트를 유지한다.
+              if (path != null) navigator.pop(path);
             },
           ),
           const SizedBox(height: 10),
@@ -778,12 +655,10 @@ class AddPlantPhotoPickerSheet extends StatelessWidget {
             label: '사진 업로드',
             color: const Color(0xFF7A9E7E),
             onTap: () async {
-              Navigator.pop(context);
+              final navigator = Navigator.of(context);
               final path = await ImageUploadService.instance
                   .pickPlantImage(ImageSource.gallery);
-              if (path != null && context.mounted) {
-                _openAddSheet(context, imagePath: path);
-              }
+              if (path != null) navigator.pop(path);
             },
           ),
           const SizedBox(height: 10),
@@ -791,27 +666,12 @@ class AddPlantPhotoPickerSheet extends StatelessWidget {
             label: '사진 없이 등록',
             color: const Color(0xFFEDE8DF),
             textColor: PlantItColors.text,
-            onTap: () {
-              Navigator.pop(context);
-              _openAddSheet(context);
-            },
+            // 빈 문자열 = "사진 없이 등록 진행". null(드래그 닫기)과 구분한다.
+            onTap: () => Navigator.pop(context, ''),
           ),
         ],
       ),
     );
-  }
-
-  void _openAddSheet(BuildContext context, {String? imagePath}) {
-    showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => AddPlantSheet(initialImagePath: imagePath),
-    ).then((created) {
-      if (created == true && context.mounted) {
-        Navigator.pop(context, true);
-      }
-    });
   }
 }
 

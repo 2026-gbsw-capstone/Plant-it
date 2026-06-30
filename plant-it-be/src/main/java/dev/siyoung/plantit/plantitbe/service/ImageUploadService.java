@@ -22,6 +22,7 @@ public class ImageUploadService {
             case "diary" -> "diaries";
             case "ai" -> "ai";
             case "guide" -> "guides";
+            case "profile" -> "profiles";
             default -> "images";
         };
 

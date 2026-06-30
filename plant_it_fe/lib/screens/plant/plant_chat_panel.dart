@@ -97,7 +97,7 @@ class _PlantChatScreenState extends State<PlantChatScreen> {
         ..clear()
         ..addAll(
           messages.isEmpty
-              ? const [_ChatMessage(text: '식물 상태나 관리 방법을 물어보세요.', mine: false)]
+              ? const [_ChatMessage(text: '질문이 있다면 저한테 물어보세요.', mine: false)]
               : messages,
         );
     });
@@ -152,9 +152,9 @@ class _PlantChatScreenState extends State<PlantChatScreen> {
                             color: PlantItColors.paper,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            '식물의 상태나 관리 방법을 물어보세요.',
-                            style: TextStyle(fontSize: 12, height: 1.5),
+                          child: Text(
+                            '${plant?.name ?? '식물'}에 대한 질문이 있다면 저한테 물어보세요.',
+                            style: const TextStyle(fontSize: 12, height: 1.5),
                           ),
                         ),
                       ),
@@ -188,14 +188,40 @@ class _PlantChatScreenState extends State<PlantChatScreen> {
                   child: Row(
                     children: [
                       _SquareIconButton(
-                        icon: Icons.add_a_photo_outlined,
+                        icon: Icons.add,
                         onTap: _sending ? null : _showUploadSheet,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
                           controller: _controller,
-                          decoration: const InputDecoration(hintText: '물어보기'),
+                          decoration: InputDecoration(
+                            hintText: '여기에 입력...',
+                            filled: true,
+                            fillColor: PlantItColors.paper,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(22),
+                              borderSide: const BorderSide(
+                                color: PlantItColors.line,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(22),
+                              borderSide: const BorderSide(
+                                color: PlantItColors.line,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(22),
+                              borderSide: const BorderSide(
+                                color: PlantItColors.green,
+                              ),
+                            ),
+                          ),
                           onSubmitted: (_) => _send(),
                         ),
                       ),
@@ -400,9 +426,7 @@ class _PlantChatUploadSheetState extends State<_PlantChatUploadSheet> {
       );
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_uploadErrorMessage(error))));
+        showSB(context, _uploadErrorMessage(error));
       }
     } finally {
       if (mounted) setState(() => _analyzing = false);
@@ -425,7 +449,7 @@ class _PlantChatUploadSheetState extends State<_PlantChatUploadSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            '식물 상태 확인',
+            '첨부',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),

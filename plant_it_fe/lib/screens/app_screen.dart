@@ -36,6 +36,15 @@ part 'shared/app_widgets.dart';
 
 const _fallbackPlantImage = 'assets/images/figma/plant_pot.jpg';
 
+/// 식물 데이터가 변경됐을 때 알리는 글로벌 신호.
+/// 추가·삭제·초기화 시 [PlantStore.instance.notify()] 호출.
+class PlantStore extends ChangeNotifier {
+  PlantStore._();
+  static final PlantStore instance = PlantStore._();
+
+  void notify() => notifyListeners();
+}
+
 class ProfileRouteScreen extends StatefulWidget {
   const ProfileRouteScreen();
 

@@ -12,6 +12,7 @@ import com.google.firebase.messaging.Notification;
 import com.google.cloud.storage.BlobInfo;
 import dev.siyoung.plantit.plantitbe.exception.PlantItException;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class FirebaseService {
     private final String credentialsPath;
@@ -69,7 +71,8 @@ public class FirebaseService {
                     ? FirebaseApp.initializeApp(options.build())
                     : FirebaseApp.getInstance();
         } catch (Exception e) {
-            throw new PlantItException(HttpStatus.INTERNAL_SERVER_ERROR, "Firebase 초기화에 실패했습니다.");
+            log.warn("Firebase 초기화 실패 — Firebase 기능이 비활성화됩니다: {}", e.getMessage());
+            firebaseApp = null;
         }
     }
 

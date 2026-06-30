@@ -5,6 +5,7 @@ class PlantDiaryModel {
     this.note,
     this.recordedAt,
     this.aiHealthSummary,
+    this.diaryType = DiaryType.growth,
   });
 
   final int id;
@@ -12,6 +13,10 @@ class PlantDiaryModel {
   final String? note;
   final DateTime? recordedAt;
   final String? aiHealthSummary;
+  final DiaryType diaryType;
+
+  bool get isGrowth => diaryType == DiaryType.growth;
+  bool get isMoment => diaryType == DiaryType.moment;
 
   factory PlantDiaryModel.fromJson(Map<String, dynamic> json) {
     return PlantDiaryModel(
@@ -22,6 +27,17 @@ class PlantDiaryModel {
           ? DateTime.tryParse(json['recordedAt'] as String)
           : null,
       aiHealthSummary: json['aiHealthSummary'] as String?,
+      diaryType: DiaryType.fromString(json['diaryType'] as String?),
     );
+  }
+}
+
+enum DiaryType {
+  growth,
+  moment;
+
+  static DiaryType fromString(String? value) {
+    if (value == 'MOMENT') return DiaryType.moment;
+    return DiaryType.growth;
   }
 }

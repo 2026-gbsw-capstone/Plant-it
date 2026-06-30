@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 /// 법적 문서를 구성하는 데이터 모델.
 class LegalDoc {
   const LegalDoc({

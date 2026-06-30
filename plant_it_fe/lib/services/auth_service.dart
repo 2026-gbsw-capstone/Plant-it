@@ -13,11 +13,17 @@ class AuthService {
   Future<void> signInWithGoogle() async {
     await FirebaseMessagingService.instance.initializeFirebase();
     await _ensureGoogleSignInInitialized();
-    if (!GoogleSignIn.instance.supportsAuthenticate()) {
-      throw ApiException('현재 플랫폼에서 Google 로그인을 사용할 수 없습니다.');
+
+    final GoogleSignInAccount googleUser;
+    try {
+      googleUser = await GoogleSignIn.instance.authenticate();
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        throw ApiException('Google 로그인이 취소되었습니다.');
+      }
+      throw ApiException('Google 로그인에 실패했습니다: ${e.description ?? e.code}');
     }
 
-    final googleUser = await GoogleSignIn.instance.authenticate();
     final googleIdToken = googleUser.authentication.idToken;
     if (googleIdToken == null || googleIdToken.isEmpty) {
       throw ApiException('Google 인증 토큰을 받지 못했습니다.');

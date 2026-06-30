@@ -55,7 +55,10 @@ class SettingsScreen extends StatelessWidget {
         actionLabel: '초기화',
         actionColor: const Color(0xFFB94040),
         onConfirm: (password) => ApiService.instance.resetData(password),
-        onSuccess: (ctx) => Navigator.pop(ctx),
+        onSuccess: (ctx) {
+          PlantStore.instance.notify();
+          Navigator.pop(ctx);
+        },
       ),
     );
   }

@@ -27,3 +27,17 @@ flutter:
 
   assets:
     - assets/icons/growve_icon.png
+    - assets/fonts/
+
+  fonts:
+    - family: GmarketSansTTF
+      fonts:
+        - asset: assets/fonts/GmarketSansTTFBold.ttf
+          weight: 700
+        - asset: assets/fonts/GmarketSansTTFMedium.ttf
+          weight: 500
+        - asset: assets/fonts/GmarketSansTTFLight.ttf
+          weight: 300
+    - family: twaySky
+      fonts:
+        - asset: assets/fonts/tway_sky.ttf

@@ -17,7 +17,7 @@ class ApiService {
   static final String baseUrl =
       const String.fromEnvironment('API_BASE_URL', defaultValue: '').isNotEmpty
       ? const String.fromEnvironment('API_BASE_URL')
-      : 'https://capstone-ec2.siyoung.dev/api/v1';
+      : 'http://13.213.12.186/api/v1';
 
   final http.Client _client = http.Client();
   final StorageService _storage = StorageService.instance;
@@ -50,6 +50,27 @@ class ApiService {
     await _storage.saveTokens(
       accessToken: data['accessToken'] as String? ?? '',
       refreshToken: data['refreshToken'] as String? ?? '',
+    );
+  }
+
+  Future<void> requestSignupEmailCode(String email) async {
+    await _request<Map<String, dynamic>>(
+      'POST',
+      '/auth/signup/email/request',
+      body: {'email': email},
+      auth: false,
+    );
+  }
+
+  Future<void> verifySignupEmailCode({
+    required String email,
+    required String code,
+  }) async {
+    await _request<void>(
+      'POST',
+      '/auth/signup/email/verify',
+      body: {'email': email, 'code': code},
+      auth: false,
     );
   }
 
@@ -226,6 +247,18 @@ class ApiService {
     return UserModel.fromJson(data);
   }
 
+  Future<UserModel> updateMe({String? nickname, String? profileImageUrl}) async {
+    final data = await _request<Map<String, dynamic>>(
+      'PATCH',
+      '/users/me',
+      body: {
+        'nickname': _emptyToNull(nickname),
+        'profileImageUrl': profileImageUrl,
+      },
+    );
+    return UserModel.fromJson(data);
+  }
+
   Future<List<PlantModel>> getPlants({String? keyword}) async {
     final query = keyword == null || keyword.trim().isEmpty
         ? ''
@@ -330,6 +363,8 @@ class ApiService {
     String? imageUrl,
     String? note,
     DateTime? recordedAt,
+    bool analyzeHealth = false,
+    String diaryType = 'GROWTH',
   }) async {
     final data = await _request<Map<String, dynamic>>(
       'POST',
@@ -338,6 +373,8 @@ class ApiService {
         'imageUrl': _emptyToNull(imageUrl),
         'note': _emptyToNull(note),
         'recordedAt': (recordedAt ?? DateTime.now()).toIso8601String(),
+        'analyzeHealth': analyzeHealth,
+        'diaryType': diaryType,
       },
     );
     return (data['diaryId'] as num?)?.toInt() ?? 0;

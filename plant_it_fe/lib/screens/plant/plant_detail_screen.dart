@@ -225,7 +225,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 _ActionButton(
                   icon: 'assets/icons/trash.svg',
                   label: '삭제',
-                  onTap: () => _showDeleteDialog(),
+                  onTap: () => _showDeleteDialog(plant),
                   color: const Color(0xFFB94040),
                 ),
               ],
@@ -288,28 +288,13 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     try {
       await ApiService.instance.waterPlant(plantId);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('물주기 기록이 저장됐어요.')));
+      showSB(context, '물주기 기록이 저장됐어요.');
       _refresh();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
+        showSB(context, error.toString());
       }
     }
-  }
-
-  void _showEditSheet(PlantModel plant) {
-    showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => AddPlantSheet(plant: plant),
-    ).then((changed) {
-      if (changed == true) _refresh();
-    });
   }
 
   // Figma: 간단 수정 다이얼로그 (이름만)
@@ -335,11 +320,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-  // 잠금 다이얼로그
   void _showLockDialog(PlantModel plant) {
     showDialog(
       context: context,
-      builder: (_) => Dialog(
+      builder: (dialogContext) => Dialog(
         backgroundColor: const Color(0xFFF5F0E8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
@@ -362,7 +346,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(dialogContext),
                     child: const Text(
                       '취소',
                       style: TextStyle(color: PlantItColors.muted),
@@ -370,7 +354,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   ),
                   const SizedBox(width: 8),
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      showSB(context, '잠금 기능은 아직 준비 중이에요.');
+                    },
                     child: const Text(
                       '잠금',
                       style: TextStyle(
@@ -388,38 +375,67 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-  void _showDeleteDialog() {
+  void _showDeleteDialog(PlantModel plant) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('식물을 삭제할까요?'),
-        content: const Text('삭제하면 성장 기록도 함께 삭제됩니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: const Color(0xFFF5F0E8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 24, 22, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '식물 삭제',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                '삭제하면 ${plant.name}에 대한 기억이 모두 사라져 버려요. 그래도 삭제할까요?',
+                style: const TextStyle(fontSize: 14, height: 1.55),
+              ),
+              const SizedBox(height: 22),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text(
+                      '취소',
+                      style: TextStyle(color: PlantItColors.muted),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () async {
+                      final navigator = Navigator.of(dialogContext);
+                      try {
+                        await ApiService.instance.deletePlant(widget.plantId);
+                        if (!mounted) return;
+                        PlantStore.instance.notify();
+                        navigator.pop();
+                        context.pop();
+                      } catch (error) {
+                        if (mounted) {
+                          showSB(context, error.toString());
+                        }
+                      }
+                    },
+                    child: const Text(
+                      '삭제',
+                      style: TextStyle(
+                        color: Color(0xFFB94040),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              try {
-                await ApiService.instance.deletePlant(widget.plantId);
-                if (!mounted) return;
-                Navigator.pop(context);
-                context.pop();
-              } catch (error) {
-                if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(error.toString())));
-                }
-              }
-            },
-            child: const Text(
-              '삭제',
-              style: TextStyle(color: Color(0xFFB94040)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -686,6 +702,7 @@ class _GrowthGalleryScreenState extends State<GrowthGalleryScreen> {
   }
 
   Widget _body(_GalleryData data) {
+    final items = _buildGalleryItems(data.diaries);
     return SafeArea(
       child: Column(
         children: [
@@ -760,8 +777,7 @@ class _GrowthGalleryScreenState extends State<GrowthGalleryScreen> {
                       ),
                     )
                   else
-                    for (var i = 0; i < data.diaries.length; i++)
-                      _DiaryEntry(data.diaries[i], index: i),
+                    for (final item in items) item,
                 ],
               ),
             ),
@@ -769,6 +785,44 @@ class _GrowthGalleryScreenState extends State<GrowthGalleryScreen> {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildGalleryItems(List<PlantDiaryModel> diaries) {
+    final items = <Widget>[];
+    int growthIndex = 0;
+    int i = 0;
+
+    while (i < diaries.length) {
+      final diary = diaries[i];
+      if (diary.isGrowth) {
+        growthIndex++;
+        items.add(_GrowthDiaryCard(
+          diary: diary,
+          dayIndex: growthIndex,
+        ));
+        i++;
+
+        // 이 성장일기 다음에 오는 순간들을 모아서 가로 행으로 표시
+        final moments = <PlantDiaryModel>[];
+        while (i < diaries.length && diaries[i].isMoment) {
+          moments.add(diaries[i]);
+          i++;
+        }
+        if (moments.isNotEmpty) {
+          items.add(_MomentRow(moments: moments));
+        }
+      } else {
+        // 성장일기 없이 순간만 오는 경우 (맨 앞)
+        final moments = <PlantDiaryModel>[];
+        while (i < diaries.length && diaries[i].isMoment) {
+          moments.add(diaries[i]);
+          i++;
+        }
+        items.add(_MomentRow(moments: moments));
+      }
+    }
+
+    return items;
   }
 
   void _showAddDiary() {
@@ -783,50 +837,201 @@ class _GrowthGalleryScreenState extends State<GrowthGalleryScreen> {
   }
 }
 
-class _DiaryEntry extends StatelessWidget {
-  const _DiaryEntry(this.diary, {required this.index});
+// ─── 성장일기 큰 카드 ────────────────────────────────────────────────────────
+
+class _GrowthDiaryCard extends StatelessWidget {
+  const _GrowthDiaryCard({required this.diary, required this.dayIndex});
 
   final PlantDiaryModel diary;
-  final int index;
+  final int dayIndex;
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = (diary.imageUrl ?? '').isNotEmpty;
     final date = diary.recordedAt;
     final dateLabel = date != null ? '${date.month}월 ${date.day}일' : '';
-    final dayLabel = '${index + 1}일차';
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 날짜 위에
-          if (dateLabel.isNotEmpty)
-            Text(
-              dateLabel,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
+      padding: const EdgeInsets.only(bottom: 28),
+      child: GestureDetector(
+        onTap: () => _showModal(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (dateLabel.isNotEmpty) ...[
+              Text(
+                dateLabel,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          if (dateLabel.isNotEmpty) const SizedBox(height: 10),
-          // 이미지
-          if (hasImage)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: AspectRatio(
-                aspectRatio: 1.0,
-                child: _PlantImage(url: diary.imageUrl, fit: BoxFit.cover),
+              const SizedBox(height: 10),
+            ],
+            if ((diary.imageUrl ?? '').isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: AspectRatio(
+                  aspectRatio: 1.0,
+                  child: _PlantImage(url: diary.imageUrl, fit: BoxFit.cover),
+                ),
               ),
-            ),
-          const SizedBox(height: 8),
-          // 일차
-          Text(
-            (diary.note?.isNotEmpty ?? false) ? diary.note! : dayLabel,
-            style: const TextStyle(fontSize: 13, color: PlantItColors.muted),
-          ),
-        ],
+            const SizedBox(height: 8),
+            if ((diary.note ?? '').isNotEmpty)
+              Text(
+                diary.note!,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: PlantItColors.muted,
+                ),
+              ),
+            if ((diary.aiHealthSummary ?? '').isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: PlantItColors.paper,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome,
+                      size: 16,
+                      color: PlantItColors.green,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        diary.aiHealthSummary!,
+                        style: const TextStyle(fontSize: 12, height: 1.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showModal(BuildContext context) {
+    final date = diary.recordedAt;
+    final dateLabel = date != null ? '${date.month}월 ${date.day}일' : '';
+    showDialog(
+      context: context,
+      builder: (_) => _DiaryViewDialog(
+        imageUrl: diary.imageUrl,
+        dateLabel: dateLabel,
+        bottomLabel: '$dayIndex일차',
+      ),
+    );
+  }
+}
+
+// ─── 순간 가로 행 ─────────────────────────────────────────────────────────────
+
+class _MomentRow extends StatelessWidget {
+  const _MomentRow({required this.moments});
+
+  final List<PlantDiaryModel> moments;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 28),
+      child: SizedBox(
+        height: 100,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: moments.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            final moment = moments[index];
+            return GestureDetector(
+              onTap: () => _showModal(context, moment),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: _PlantImage(url: moment.imageUrl, fit: BoxFit.cover),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showModal(BuildContext context, PlantDiaryModel moment) {
+    final date = moment.recordedAt;
+    final dateLabel = date != null ? '${date.month}월 ${date.day}일' : '';
+    showDialog(
+      context: context,
+      builder: (_) => _DiaryViewDialog(
+        imageUrl: moment.imageUrl,
+        dateLabel: dateLabel,
+        bottomLabel: (moment.note ?? '').isNotEmpty ? moment.note! : null,
+      ),
+    );
+  }
+}
+
+// ─── 다이어리 뷰 모달 ─────────────────────────────────────────────────────────
+
+class _DiaryViewDialog extends StatelessWidget {
+  const _DiaryViewDialog({
+    required this.imageUrl,
+    required this.dateLabel,
+    this.bottomLabel,
+  });
+
+  final String? imageUrl;
+  final String dateLabel;
+  final String? bottomLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: const Color(0xFFF5F0E8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (dateLabel.isNotEmpty)
+              Text(
+                dateLabel,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            if (dateLabel.isNotEmpty) const SizedBox(height: 12),
+            if ((imageUrl ?? '').isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: AspectRatio(
+                  aspectRatio: 1.0,
+                  child: _PlantImage(url: imageUrl, fit: BoxFit.cover),
+                ),
+              ),
+            if (bottomLabel != null && bottomLabel!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                bottomLabel!,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -961,9 +1166,7 @@ class _PlantSimpleEditDialogState extends State<_PlantSimpleEditDialog> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+        showSB(context, error.toString());
         setState(() => _saving = false);
       }
     }
@@ -1066,9 +1269,7 @@ class _PlantPhotoChangeSheet extends StatelessWidget {
       onChanged();
     } catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+        showSB(context, error.toString());
       }
     }
   }

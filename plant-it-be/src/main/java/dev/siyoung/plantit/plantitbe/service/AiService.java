@@ -20,6 +20,7 @@ import dev.siyoung.plantit.plantitbe.utils.EntityDtoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -74,6 +75,15 @@ public class AiService {
             saveAnalysis(plant, request.getImageUrl(), PlantAiAnalysis.AnalysisType.HEALTH_ANALYSIS, e.getMessage(), PlantAiAnalysis.ResultStatus.FAILED);
             throw e;
         }
+    }
+
+    /**
+     * 성장 기록 저장 흐름에서 호출한다. 별도 트랜잭션으로 분리해, AI 분석이 실패해도
+     * 기록 저장(호출자 트랜잭션)이 롤백되지 않도록 한다.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public HealthCheckResponseDto healthCheckInNewTransaction(Long userId, HealthCheckRequestDto request) {
+        return healthCheck(userId, request);
     }
 
     public ChatResponseDto chat(Long userId, ChatRequestDto request) {

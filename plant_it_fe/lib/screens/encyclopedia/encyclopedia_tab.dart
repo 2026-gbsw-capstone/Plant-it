@@ -40,6 +40,7 @@ class _EncyclopediaTabState extends State<EncyclopediaTab> {
                 color: PlantItColors.paper,
                 borderRadius: BorderRadius.circular(23),
               ),
+              clipBehavior: Clip.hardEdge,
               child: TextField(
                 controller: _searchController,
                 onSubmitted: (keyword) => setState(
@@ -49,6 +50,7 @@ class _EncyclopediaTabState extends State<EncyclopediaTab> {
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search, size: 20),
                   hintText: '검색',
+                  filled: false,
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,

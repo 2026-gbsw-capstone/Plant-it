@@ -40,25 +40,34 @@ class _AuthScreenState extends State<AuthScreen> {
         await _submitPasswordReset();
       } else if (_signupMode) {
         // 회원가입 1단계: 이메일+비번 확인 후 유저네임 화면으로
-        if (_password.text != _confirmPassword.text) {
-          _showMessage('비밀번호가 일치하지 않아요.');
+        if (!kEmailPattern.hasMatch(_email.text.trim())) {
+          _showMessage('이메일 형식이 올바르지 않아요.');
           return;
         }
         if (_password.text.length < 8) {
           _showMessage('비밀번호는 8자 이상 입력해주세요.');
           return;
         }
-        // 유저네임 입력 화면으로 이동
-        final result = await Navigator.push<bool>(
+        if (!kPasswordPattern.hasMatch(_password.text)) {
+          _showMessage(kPasswordRuleMessage);
+          return;
+        }
+        if (_password.text != _confirmPassword.text) {
+          _showMessage('비밀번호가 일치하지 않아요.');
+          return;
+        }
+        // 이메일 인증 코드를 보내고 인증 화면으로 이동
+        await ApiService.instance.requestSignupEmailCode(_email.text.trim());
+        if (!mounted) return;
+        await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => SignupNicknameScreen(
+            builder: (_) => SignupEmailVerifyScreen(
               email: _email.text.trim(),
               password: _password.text,
             ),
           ),
         );
-        if (result == true && mounted) _enterApp();
       } else {
         await ApiService.instance.login(
           email: _email.text.trim(),
@@ -160,9 +169,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showSB(context, message);
   }
 
   @override
@@ -413,6 +420,10 @@ class _SignupNicknameScreenState extends State<SignupNicknameScreen> {
       setState(() => _errorText = '유저네임을 입력해주세요.');
       return;
     }
+    if (!kNicknamePattern.hasMatch(nickname)) {
+      setState(() => _errorText = kNicknameRuleMessage);
+      return;
+    }
     setState(() {
       _loading = true;
       _errorText = null;
@@ -533,6 +544,195 @@ class _SignupNicknameScreenState extends State<SignupNicknameScreen> {
                     label: _loading ? '처리 중' : '확인',
                     expanded: true,
                     onTap: _loading ? null : _submit,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── 회원가입 1.5단계: 이메일 인증 ───────────────────────────────────────────
+
+class SignupEmailVerifyScreen extends StatefulWidget {
+  const SignupEmailVerifyScreen({
+    required this.email,
+    required this.password,
+    super.key,
+  });
+
+  final String email;
+  final String password;
+
+  @override
+  State<SignupEmailVerifyScreen> createState() =>
+      _SignupEmailVerifyScreenState();
+}
+
+class _SignupEmailVerifyScreenState extends State<SignupEmailVerifyScreen> {
+  final _code = TextEditingController();
+  bool _loading = false;
+  String? _errorText;
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _verify() async {
+    final code = _code.text.trim();
+    if (code.length != 6) {
+      setState(() => _errorText = '6자리 인증 코드를 입력해 주세요.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _errorText = null;
+    });
+    try {
+      await ApiService.instance.verifySignupEmailCode(
+        email: widget.email,
+        code: code,
+      );
+      if (!mounted) return;
+      // 인증 완료 → 유저네임 화면으로 (이 화면은 스택에서 교체)
+      await Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SignupNicknameScreen(
+            email: widget.email,
+            password: widget.password,
+          ),
+        ),
+      );
+    } catch (error) {
+      if (mounted) setState(() => _errorText = error.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _resend() async {
+    if (_loading) return;
+    setState(() {
+      _loading = true;
+      _errorText = null;
+    });
+    try {
+      await ApiService.instance.requestSignupEmailCode(widget.email);
+      if (!mounted) return;
+      _code.clear();
+      showSB(context, '인증 코드를 다시 보냈어요.');
+    } catch (error) {
+      if (mounted) setState(() => _errorText = error.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 16, 16, 0),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+                  const Expanded(
+                    child: Text(
+                      '회원가입',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(width: 48),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
+                children: [
+                  Text(
+                    '${widget.email}로 보낸\n6자리 인증 코드를 입력해 주세요',
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    '인증 코드',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: PlantItColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  TextField(
+                    controller: _code,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    autofocus: true,
+                    onSubmitted: (_) => _verify(),
+                    decoration: const InputDecoration(
+                      hintText: '000000',
+                      hintStyle: TextStyle(color: PlantItColors.muted),
+                      counterText: '',
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: PlantItColors.line),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: PlantItColors.line),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: PlantItColors.green,
+                          width: 1.4,
+                        ),
+                      ),
+                      contentPadding: EdgeInsets.fromLTRB(0, 8, 0, 10),
+                    ),
+                  ),
+                  if (_errorText != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _errorText!,
+                      style: const TextStyle(
+                        color: Color(0xFFB94040),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _loading ? null : _resend,
+                      style: TextButton.styleFrom(
+                        foregroundColor: PlantItColors.green,
+                      ),
+                      child: const Text('인증 코드 다시 보내기'),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _PrimaryButton(
+                    label: _loading ? '처리 중' : '확인',
+                    expanded: true,
+                    onTap: _loading ? null : _verify,
                   ),
                 ],
               ),

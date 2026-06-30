@@ -1,5 +1,8 @@
 package dev.siyoung.plantit.plantitbe.contorller;
 
+import dev.siyoung.plantit.plantitbe.dto.auth.EmailVerificationConfirmRequestDto;
+import dev.siyoung.plantit.plantitbe.dto.auth.EmailVerificationRequestDto;
+import dev.siyoung.plantit.plantitbe.dto.auth.EmailVerificationRequestResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.auth.GoogleLoginRequestDto;
 import dev.siyoung.plantit.plantitbe.dto.auth.GoogleLoginResponseDto;
 import dev.siyoung.plantit.plantitbe.dto.auth.LoginRequestDto;
@@ -28,6 +31,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
     private final AuthService authService;
+
+    @PostMapping("/signup/email/request")
+    public ResponseEntity<ApiResponse<EmailVerificationRequestResponseDto>> requestSignupEmailVerification(@Valid @RequestBody EmailVerificationRequestDto request) {
+        return ResponseEntity.ok(ApiResponse.success("이메일 인증 코드가 발송되었습니다.", authService.requestSignupEmailVerification(request)));
+    }
+
+    @PostMapping("/signup/email/verify")
+    public ResponseEntity<ApiResponse<Void>> verifySignupEmail(@Valid @RequestBody EmailVerificationConfirmRequestDto request) {
+        authService.verifySignupEmail(request);
+        return ResponseEntity.ok(ApiResponse.success("이메일 인증이 완료되었습니다."));
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponseDto>> signup(@Valid @RequestBody SignupRequestDto request) {

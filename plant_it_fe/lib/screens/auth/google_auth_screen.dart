@@ -19,9 +19,7 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
       context.go('/home');
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
+        showSB(context, error.toString());
       }
     } finally {
       if (mounted) setState(() => _loading = false);
